@@ -1,22 +1,24 @@
-# Auto-detect text files and normalise line endings
-* text=auto
+# Normalise all line endings to LF on commit
+* text=auto eol=lf
 
-# Force LF for Python source
-*.py text eol=lf
-
-# Force LF for config and docs
-*.md  text eol=lf
-*.yml text eol=lf
+# Explicitly LF for source and config
+*.py   text eol=lf
+*.md   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
 *.toml text eol=lf
-*.txt text eol=lf
-*.cfg text eol=lf
-*.ini text eol=lf
+*.txt  text eol=lf
+*.cfg  text eol=lf
+*.ini  text eol=lf
+*.css  text eol=lf
+*.svg  text eol=lf
 
-# Binary files — do not touch
-*.png binary
-*.jpg binary
-*.gif binary
-*.ico binary
-*.dcm binary
-*.nii binary
-*.gz  binary
+# Binary — never touch
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.dcm  binary
+*.nii  binary
+*.gz   binary
