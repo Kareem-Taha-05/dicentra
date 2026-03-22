@@ -1,0 +1,10 @@
+/* Dicentra docs — Deep Space Medical accent */
+:root {
+  --md-primary-fg-color: #7C3AED;
+  --md-accent-fg-color: #A78BFA;
+}
+
+.md-header { background-color: #0E0B1A; }
+.md-tabs   { background-color: #0E0B1A; }
+
+code { font-family: 'JetBrains Mono', 'Fira Code', monospace; }

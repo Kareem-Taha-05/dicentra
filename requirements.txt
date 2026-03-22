@@ -1,0 +1,10 @@
+# Dicentra — runtime dependencies
+# pip install -r requirements.txt
+
+pydicom>=2.4.0
+numpy>=1.24.0
+scipy>=1.10.0
+PyQt5>=5.15.0
+matplotlib>=3.7.0
+Pillow>=9.0.0
+imageio>=2.28.0

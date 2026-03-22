@@ -1,0 +1,11 @@
+# Dicentra — development & testing dependencies
+# pip install -r requirements-dev.txt
+
+-r requirements.txt
+
+pytest>=7.4.0
+pytest-qt>=4.2.0
+ruff>=0.1.0
+pre-commit>=3.5.0
+mkdocs>=1.5.0
+mkdocs-material>=9.4.0

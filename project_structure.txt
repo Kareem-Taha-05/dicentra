@@ -1,0 +1,66 @@
+DICOM Viewer Pro – Project Structure
+=====================================
+
+dicom_viewer/
+│
+├── main.py                         # Application entry point
+│
+├── requirements.txt                # Python dependencies
+├── .gitignore                      # VCS ignore rules
+├── README.md                       # Full project documentation
+├── project_structure.txt           # This file
+│
+├── config/
+│   ├── __init__.py
+│   └── settings.py                 # App-wide constants and configuration
+│
+├── app/                            # Application source package
+│   ├── __init__.py
+│   │
+│   ├── data/                       # Data layer (Model)
+│   │   ├── __init__.py
+│   │   └── dicom_model.py          # DicomModel: wraps pydicom, typed accessors
+│   │
+│   ├── logic/                      # Business logic (Controller)
+│   │   ├── __init__.py
+│   │   ├── controller.py           # DicomController: MVC controller, Qt signals
+│   │   └── image_processor.py      # Pure NumPy image processing utilities
+│   │
+│   ├── gui/                        # Presentation layer (View)
+│   │   ├── __init__.py
+│   │   ├── main_window.py          # QMainWindow shell; assembles tabs
+│   │   ├── image_tab.py            # Image Viewer tab
+│   │   ├── metadata_tab.py         # Metadata / tag browser tab
+│   │   ├── threed_tab.py           # 3-D tile viewer tab
+│   │   ├── widgets.py              # Reusable widget factory helpers
+│   │   └── stylesheet.py           # Centralised dark-theme Qt stylesheet
+│   │
+│   └── utils/
+│       ├── __init__.py
+│       └── logger.py               # Rotating file + console logging setup
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_image_processor.py     # Unit tests – image processing
+│   └── test_dicom_model.py         # Unit tests – data model
+│
+├── resources/                      # Icons, fonts, assets (future use)
+└── logs/                           # Runtime log files (git-ignored)
+
+
+Architecture Overview
+---------------------
+
+Pattern: MVC (Model-View-Controller)
+
+  ┌─────────────────┐       ┌───────────────────────┐       ┌─────────────┐
+  │   GUI  (Views)  │──────▶│  DicomController (C)  │──────▶│ DicomModel  │
+  │  image_tab      │◀──────│  logic/controller.py  │◀──────│ data layer  │
+  │  metadata_tab   │signals│                       │       │             │
+  │  threed_tab     │       │  image_processor.py   │       │  pydicom    │
+  └─────────────────┘       └───────────────────────┘       └─────────────┘
+
+- Views emit user actions → Controller methods
+- Controller processes business logic → emits Qt signals back to Views
+- Model owns all DICOM I/O; no Qt in the data or logic layers
+- Config layer centralises all constants; no magic numbers in source files

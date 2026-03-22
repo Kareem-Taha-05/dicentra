@@ -1,0 +1,54 @@
+site_name: Dicentra
+site_description: A modern, modular DICOM viewer for clinical imaging workflows
+site_url: https://Kareem-Taha-05.github.io/dicentra
+repo_url: https://github.com/Kareem-Taha-05/dicentra
+repo_name: Kareem-Taha-05/dicentra
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Quick Start: quickstart.md
+  - Usage Guide: usage.md
+  - Architecture: architecture.md
+  - API Reference:
+      - Image Processing: api/image_processing.md
+      - Data Loaders: api/loaders.md
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - tables
