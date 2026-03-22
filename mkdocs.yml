@@ -1,38 +1,55 @@
 site_name: Dicentra
-site_description: A modern, modular DICOM viewer for clinical imaging workflows
-site_url: https://Kareem-Taha-05.github.io/dicentra
-repo_url: https://github.com/Kareem-Taha-05/dicentra
-repo_name: Kareem-Taha-05/dicentra
+site_description: Clinical DICOM viewer — window/level, series browser, metadata, colormaps
+site_url: https://your-username.github.io/dicentra
+repo_url: https://github.com/your-username/dicentra
+repo_name: your-username/dicentra
+copyright: Copyright &copy; 2025 Kareem
 
 theme:
   name: material
+  favicon: assets/branding/logo.svg
+  logo: assets/branding/logo.svg
+  font:
+    text: Inter
+    code: JetBrains Mono
   palette:
     - scheme: slate
-      primary: deep purple
-      accent: purple
+      primary: custom
+      accent: custom
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-night
         name: Switch to light mode
     - scheme: default
-      primary: deep purple
-      accent: purple
+      primary: custom
+      accent: custom
       toggle:
-        icon: material/brightness-7
+        icon: material/weather-sunny
         name: Switch to dark mode
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.top
+    - navigation.footer
     - search.highlight
+    - search.suggest
     - content.code.copy
+    - content.code.annotate
+    - toc.follow
   icon:
     repo: fontawesome/brands/github
+    admonition:
+      note: octicons/tag-16
+      warning: octicons/alert-16
+      danger: octicons/stop-16
+      tip: octicons/light-bulb-16
 
 nav:
   - Home: index.md
-  - Installation: installation.md
-  - Quick Start: quickstart.md
-  - Usage Guide: usage.md
+  - Getting Started:
+      - Installation: installation.md
+      - Quick Start: quickstart.md
+  - User Guide: usage.md
   - Architecture: architecture.md
   - API Reference:
       - Image Processing: api/image_processing.md
@@ -41,14 +58,29 @@ nav:
 extra_css:
   - stylesheets/extra.css
 
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-username/dicentra
+
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
+      line_spans: __span
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
   - attr_list
   - md_in_html
   - tables
+  - footnotes
+  - toc:
+      permalink: true
