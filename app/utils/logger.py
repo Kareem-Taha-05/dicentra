@@ -29,13 +29,11 @@ def setup_logger() -> None:
     if root.handlers:
         return
 
-    fmt_file    = logging.Formatter(
+    fmt_file = logging.Formatter(
         "%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    fmt_console = logging.Formatter(
-        "%(levelname)-8s  %(name)s  %(message)s"
-    )
+    fmt_console = logging.Formatter("%(levelname)-8s  %(name)s  %(message)s")
 
     # ── File handler ──────────────────────────────────────────────────────
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)

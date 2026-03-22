@@ -1,18 +1,29 @@
 """app/gui/main_window.py — wires sidebar info panels + frame nav."""
+
 from __future__ import annotations
+
 import logging
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
-    QFrame, QHBoxLayout, QLabel, QMainWindow,
-    QPushButton, QStatusBar, QTabWidget, QVBoxLayout, QWidget,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QPushButton,
+    QStatusBar,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
-from app.gui.image_tab      import ImageTab
-from app.gui.metadata_tab   import MetadataTab
+
+from app.gui.image_tab import ImageTab
+from app.gui.metadata_tab import MetadataTab
 from app.gui.series_browser import SeriesBrowser
-from app.gui.stylesheet     import THEME
-from app.gui.threed_tab     import TileViewerTab
-from app.logic.controller   import DicomControllerExtended
-from config.settings        import APP_TITLE, APP_VERSION
+from app.gui.stylesheet import THEME
+from app.gui.threed_tab import TileViewerTab
+from app.logic.controller import DicomControllerExtended
+from config.settings import APP_TITLE, APP_VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +47,7 @@ class MainWindow(QMainWindow):
         def _on_meas_cleared():
             self._series_browser.clear_measurements()
 
-        self._img_tab.on_measurement_added    = _on_meas_added
+        self._img_tab.on_measurement_added = _on_meas_added
         self._img_tab.on_measurements_cleared = _on_meas_cleared
         # Register the canvas-clear callback with the sidebar
         self._series_browser.set_clear_canvas_callback(self._img_tab.clear_measurements)
@@ -48,14 +59,18 @@ class MainWindow(QMainWindow):
 
     def _build_ui(self):
         central = QWidget()
-        layout  = QVBoxLayout(central)
+        layout = QVBoxLayout(central)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         self.setCentralWidget(central)
 
         # ── Header ─────────────────────────────────────────────────────────
-        header = QWidget(); header.setObjectName("header_bar"); header.setFixedHeight(50)
-        h = QHBoxLayout(header); h.setContentsMargins(16, 0, 20, 0); h.setSpacing(0)
+        header = QWidget()
+        header.setObjectName("header_bar")
+        header.setFixedHeight(50)
+        h = QHBoxLayout(header)
+        h.setContentsMargins(16, 0, 20, 0)
+        h.setSpacing(0)
 
         self._toggle = QPushButton("≡")
         self._toggle.setFixedSize(36, 36)
@@ -90,38 +105,47 @@ class MainWindow(QMainWindow):
         self._file_lbl.setStyleSheet(
             "color:#2D2A45;font-family:'JetBrains Mono',monospace;font-size:10px;"
         )
-        h.addWidget(self._toggle); h.addWidget(logo)
-        h.addWidget(name); h.addWidget(ver); h.addWidget(dot_sep)
-        h.addStretch(); h.addWidget(self._file_lbl)
+        h.addWidget(self._toggle)
+        h.addWidget(logo)
+        h.addWidget(name)
+        h.addWidget(ver)
+        h.addWidget(dot_sep)
+        h.addStretch()
+        h.addWidget(self._file_lbl)
         layout.addWidget(header)
 
         # ── Body ───────────────────────────────────────────────────────────
         body_w = QWidget()
-        body   = QHBoxLayout(body_w); body.setSpacing(0); body.setContentsMargins(0,0,0,0)
+        body = QHBoxLayout(body_w)
+        body.setSpacing(0)
+        body.setContentsMargins(0, 0, 0, 0)
 
         self._series_browser = SeriesBrowser()
         self._series_browser.series_selected.connect(self._on_series_event)
         self._series_browser.file_reopen_requested.connect(self._ctrl.load_file)
         body.addWidget(self._series_browser)
 
-        vdiv = QFrame(); vdiv.setFrameShape(QFrame.VLine)
+        vdiv = QFrame()
+        vdiv.setFrameShape(QFrame.VLine)
         vdiv.setStyleSheet(
             "background:rgba(124,58,237,0.12);border:none;max-width:1px;min-width:1px;"
         )
         body.addWidget(vdiv)
 
-        self._tabs = QTabWidget(); self._tabs.setDocumentMode(True)
-        self._img_tab  = ImageTab(self._ctrl)
+        self._tabs = QTabWidget()
+        self._tabs.setDocumentMode(True)
+        self._img_tab = ImageTab(self._ctrl)
         self._meta_tab = MetadataTab(self._ctrl)
         self._tile_tab = TileViewerTab(self._ctrl)
-        self._tabs.addTab(self._img_tab,  "  Image Viewer  ")
+        self._tabs.addTab(self._img_tab, "  Image Viewer  ")
         self._tabs.addTab(self._meta_tab, "  Metadata  ")
         self._tabs.addTab(self._tile_tab, "  3D · Tiles  ")
         body.addWidget(self._tabs, stretch=1)
 
         layout.addWidget(body_w, stretch=1)
 
-        self._sb = QStatusBar(); self.setStatusBar(self._sb)
+        self._sb = QStatusBar()
+        self.setStatusBar(self._sb)
         self._sb.showMessage("Ready  ·  Open a DICOM file or folder to begin")
 
     def _toggle_browser(self):

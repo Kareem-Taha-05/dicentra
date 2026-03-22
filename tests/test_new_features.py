@@ -3,15 +3,12 @@ tests/test_new_features.py
 ==========================
 Unit tests for Window/Level, histogram, and series-loading additions.
 """
+
 from __future__ import annotations
 
 import numpy as np
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
-
 
 # ── Window / Level ─────────────────────────────────────────────────────────────
-
 from app.logic.image_processor import apply_window_level, compute_histogram
 
 
@@ -27,7 +24,7 @@ class TestApplyWindowLevel:
         assert out[0, 0] == 255
 
     def test_center_maps_to_midpoint(self):
-        arr = np.array([[40.0]], dtype=np.float32)          # exactly at center
+        arr = np.array([[40.0]], dtype=np.float32)  # exactly at center
         out = apply_window_level(arr, window_width=400, window_center=40)
         # Center should map to ~127-128
         assert 120 <= int(out[0, 0]) <= 135
@@ -54,7 +51,7 @@ class TestComputeHistogram:
         arr = np.random.rand(128, 128).astype(np.float32) * 1000
         counts, edges = compute_histogram(arr, n_bins=64)
         assert len(counts) == 64
-        assert len(edges)  == 65         # n_bins + 1
+        assert len(edges) == 65  # n_bins + 1
 
     def test_counts_sum_to_total_pixels(self):
         arr = np.arange(256, dtype=np.float32).reshape(16, 16)
@@ -64,7 +61,7 @@ class TestComputeHistogram:
     def test_flat_array_doesnt_crash(self):
         arr = np.full((32, 32), 42.0, dtype=np.float32)
         counts, edges = compute_histogram(arr)
-        assert edges[-1] > edges[0]      # range was padded to avoid zero span
+        assert edges[-1] > edges[0]  # range was padded to avoid zero span
 
 
 # ── Series loading ─────────────────────────────────────────────────────────────
@@ -84,10 +81,10 @@ class TestSeriesInfo:
         )
         assert info.modality == "MR"
         assert info.n_slices == 48
-        assert info.thumbnail is None      # default
+        assert info.thumbnail is None  # default
 
     def test_thumbnail_accepts_ndarray(self):
-        arr  = np.zeros((64, 64), dtype=np.uint8)
+        arr = np.zeros((64, 64), dtype=np.uint8)
         info = SeriesInfo("uid", "desc", "CT", "20240101", 1, [], thumbnail=arr)
         assert info.thumbnail is not None
         assert info.thumbnail.shape == (64, 64)
@@ -95,7 +92,7 @@ class TestSeriesInfo:
 
 # ── Colormap / LUT ─────────────────────────────────────────────────────────────
 
-from app.logic.colormap import apply_lut, lut_preview_strip, LUT_NAMES, LUTS
+from app.logic.colormap import LUT_NAMES, LUTS, apply_lut, lut_preview_strip
 
 
 class TestColormaps:
@@ -106,11 +103,11 @@ class TestColormaps:
     def test_lut_shape(self):
         for name, lut in LUTS.items():
             assert lut.shape == (256, 3), f"{name} LUT wrong shape"
-            assert lut.dtype == np.uint8,  f"{name} LUT wrong dtype"
+            assert lut.dtype == np.uint8, f"{name} LUT wrong dtype"
 
     def test_apply_lut_grayscale_identity(self):
         gray = np.arange(256, dtype=np.uint8).reshape(16, 16)
-        out  = apply_lut(gray, "Grayscale")
+        out = apply_lut(gray, "Grayscale")
         assert out.shape == (16, 16, 4)
         assert out.dtype == np.uint8
         # R=G=B for grayscale
@@ -125,7 +122,7 @@ class TestColormaps:
 
     def test_alpha_always_255(self):
         gray = np.random.randint(0, 256, (32, 32), dtype=np.uint8)
-        out  = apply_lut(gray, "Hot")
+        out = apply_lut(gray, "Hot")
         assert np.all(out[:, :, 3] == 255)
 
     def test_preview_strip_shape(self):
@@ -145,8 +142,8 @@ class TestMeasurementCalc:
         """Replicate RulerCanvas._px_distance logic."""
         dx_px = (bx - ax) * W
         dy_px = (by - ay) * H
-        px_d  = math.hypot(dx_px, dy_px)
-        mm_d  = math.hypot(dx_px * rx, dy_px * ry) if ry > 0 and rx > 0 else None
+        px_d = math.hypot(dx_px, dy_px)
+        mm_d = math.hypot(dx_px * rx, dy_px * ry) if ry > 0 and rx > 0 else None
         return px_d, mm_d
 
     def test_horizontal_line(self):
@@ -170,36 +167,41 @@ class TestMeasurementCalc:
 
 # ── Export utilities ───────────────────────────────────────────────────────────
 
-import tempfile, os
+import os
 
 
 class TestExportUtils:
     def test_export_png_grayscale(self, tmp_path):
         from app.logic.export_utils import export_frame_png
-        arr  = np.random.randint(0, 256, (64, 64), dtype=np.uint8)
+
+        arr = np.random.randint(0, 256, (64, 64), dtype=np.uint8)
         path = str(tmp_path / "out.png")
         export_frame_png(arr, path)
         assert os.path.exists(path) and os.path.getsize(path) > 0
 
     def test_export_jpeg_grayscale(self, tmp_path):
         from app.logic.export_utils import export_frame_jpeg
-        arr  = np.random.randint(0, 256, (64, 64), dtype=np.uint8)
+
+        arr = np.random.randint(0, 256, (64, 64), dtype=np.uint8)
         path = str(tmp_path / "out.jpg")
         export_frame_jpeg(arr, path)
         assert os.path.exists(path) and os.path.getsize(path) > 0
 
     def test_export_csv(self, tmp_path):
+        from app.data.dicom_model import TagRow
         from app.logic.export_utils import export_metadata_csv
-        from app.data.dicom_model   import TagRow
+
         tags = [TagRow("(0010,0010)", "Patient Name", "Doe^John")]
         path = str(tmp_path / "meta.csv")
         export_metadata_csv(tags, path)
         assert "Doe^John" in open(path).read()
 
     def test_export_json(self, tmp_path):
-        from app.logic.export_utils import export_metadata_json
-        from app.data.dicom_model   import TagRow
         import json
+
+        from app.data.dicom_model import TagRow
+        from app.logic.export_utils import export_metadata_json
+
         tags = [TagRow("(0008,0060)", "Modality", "CT")]
         path = str(tmp_path / "meta.json")
         export_metadata_json(tags, path)

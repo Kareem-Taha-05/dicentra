@@ -4,12 +4,13 @@ app/data/dicom_model.py
 Data-access layer. Wraps pydicom — zero Qt imports.
 Series loading uses a ThreadPoolExecutor for parallel I/O.
 """
+
 from __future__ import annotations
 
 import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
@@ -19,57 +20,73 @@ from pydicom.dataset import Dataset
 
 logger = logging.getLogger(__name__)
 
-MAX_SCAN_WORKERS   = 8   # parallel header reads
-MAX_THUMB_WORKERS  = 4   # parallel thumbnail decodes
+MAX_SCAN_WORKERS = 8  # parallel header reads
+MAX_THUMB_WORKERS = 4  # parallel thumbnail decodes
 
 
 @dataclass
 class PatientInfo:
-    name: str = "N/A"; patient_id: str = "N/A"
-    birth_date: str = "N/A"; sex: str = "N/A"
+    name: str = "N/A"
+    patient_id: str = "N/A"
+    birth_date: str = "N/A"
+    sex: str = "N/A"
+
 
 @dataclass
 class StudyInfo:
-    study_id: str = "N/A"; study_date: str = "N/A"
+    study_id: str = "N/A"
+    study_date: str = "N/A"
+
 
 @dataclass
 class ModalityInfo:
     modality: str = "N/A"
 
+
 @dataclass
 class PhysicianInfo:
-    name: str = "N/A"; uid: str = "N/A"
+    name: str = "N/A"
+    uid: str = "N/A"
+
 
 @dataclass
 class ImageInfo:
-    image_type: str = "N/A"; rows: str = "N/A"; columns: str = "N/A"
+    image_type: str = "N/A"
+    rows: str = "N/A"
+    columns: str = "N/A"
+
 
 @dataclass
 class PixelDataInfo:
     description: str = "N/A"
 
+
 @dataclass
 class TagRow:
-    tag: str; name: str; value: str
+    tag: str
+    name: str
+    value: str
 
 
 class DicomModel:
     def __init__(self) -> None:
-        self.dataset:    Optional[Dataset]   = None
-        self.frames:     List[np.ndarray]    = []
-        self._file_path: str                 = ""
+        self.dataset: Optional[Dataset] = None
+        self.frames: List[np.ndarray] = []
+        self._file_path: str = ""
 
     def load(self, file_path: str) -> None:
         logger.info("Loading: %s", file_path)
-        self.dataset    = pydicom.dcmread(file_path)
+        self.dataset = pydicom.dcmread(file_path)
         self._file_path = file_path
         self._decode_frames()
 
     def load_series(self, file_paths: list) -> None:
         """Load multiple single-frame DICOM files as a multi-frame volume."""
-        import pydicom, numpy as np
+        import pydicom
+
         if not file_paths:
             return
+
         # Sort by InstanceNumber or filename for correct slice order
         def sort_key(p):
             try:
@@ -77,14 +94,15 @@ class DicomModel:
                 return int(getattr(ds, "InstanceNumber", 0))
             except Exception:
                 return 0
+
         sorted_paths = sorted(file_paths, key=sort_key)
         # Use first file as the reference dataset (for tags/metadata)
-        self.dataset    = pydicom.dcmread(sorted_paths[0])
+        self.dataset = pydicom.dcmread(sorted_paths[0])
         self._file_path = sorted_paths[0]
         self.frames = []
         for p in sorted_paths:
             try:
-                ds  = pydicom.dcmread(p)
+                ds = pydicom.dcmread(p)
                 arr = ds.pixel_array
                 if arr.ndim == 2:
                     self.frames.append(arr)
@@ -93,16 +111,17 @@ class DicomModel:
                         self.frames.append(arr[i])
             except Exception:
                 continue
-        logger.info("Series loaded: %d slices from %d files",
-                    len(self.frames), len(sorted_paths))
+        logger.info("Series loaded: %d slices from %d files", len(self.frames), len(sorted_paths))
 
     def _decode_frames(self) -> None:
         if self.dataset is None:
-            self.frames = []; return
+            self.frames = []
+            return
         try:
             arr = self.dataset.pixel_array
         except AttributeError:
-            self.frames = []; return
+            self.frames = []
+            return
         if hasattr(self.dataset, "NumberOfFrames") and int(self.dataset.NumberOfFrames) > 1:
             n = int(self.dataset.NumberOfFrames)
             self.frames = [arr[i] for i in range(n)]
@@ -112,69 +131,100 @@ class DicomModel:
             self.frames = [arr]
 
     @property
-    def is_loaded(self)     -> bool: return self.dataset is not None
+    def is_loaded(self) -> bool:
+        return self.dataset is not None
+
     @property
-    def is_multiframe(self) -> bool: return len(self.frames) > 1
+    def is_multiframe(self) -> bool:
+        return len(self.frames) > 1
+
     @property
-    def frame_count(self)   -> int:  return len(self.frames)
+    def frame_count(self) -> int:
+        return len(self.frames)
 
     def _get(self, attr: str) -> str:
         val = self.dataset.get(attr, "N/A") if self.dataset else "N/A"
         return str(val) if not isinstance(val, str) else val
 
-    def get_patient_info(self)   -> PatientInfo:
-        return PatientInfo(self._get("PatientName"), self._get("PatientID"),
-                           self._get("PatientBirthDate"), self._get("PatientSex"))
-    def get_study_info(self)     -> StudyInfo:
+    def get_patient_info(self) -> PatientInfo:
+        return PatientInfo(
+            self._get("PatientName"),
+            self._get("PatientID"),
+            self._get("PatientBirthDate"),
+            self._get("PatientSex"),
+        )
+
+    def get_study_info(self) -> StudyInfo:
         return StudyInfo(self._get("StudyID"), self._get("StudyDate"))
-    def get_modality_info(self)  -> ModalityInfo:
+
+    def get_modality_info(self) -> ModalityInfo:
         return ModalityInfo(self._get("Modality"))
+
     def get_physician_info(self) -> PhysicianInfo:
         return PhysicianInfo(self._get("PhysicianName"), self._get("PhysicianID"))
-    def get_image_info(self)     -> ImageInfo:
+
+    def get_image_info(self) -> ImageInfo:
         img_type = self.dataset.get("ImageType", "N/A") if self.dataset else "N/A"
-        if isinstance(img_type, bytes): img_type = img_type.decode("utf-8", errors="ignore")
-        else: img_type = str(img_type)
+        if isinstance(img_type, bytes):
+            img_type = img_type.decode("utf-8", errors="ignore")
+        else:
+            img_type = str(img_type)
         return ImageInfo(img_type, self._get("Rows"), self._get("Columns"))
+
     def get_pixel_data_info(self) -> PixelDataInfo:
-        if not self.dataset: return PixelDataInfo()
+        if not self.dataset:
+            return PixelDataInfo()
         v = self.dataset.get("PixelData", "N/A")
         return PixelDataInfo(f"Binary data: {len(v):,} bytes" if isinstance(v, bytes) else str(v))
 
     def get_all_tags(self) -> List[TagRow]:
-        if not self.dataset: return []
-        return [TagRow(str(e.tag), e.name, str(e.value))
-                for e in self.dataset.iterall() if e.name != "Pixel Data"]
+        if not self.dataset:
+            return []
+        return [
+            TagRow(str(e.tag), e.name, str(e.value))
+            for e in self.dataset.iterall()
+            if e.name != "Pixel Data"
+        ]
 
     def search_tags(self, query: str) -> List[TagRow]:
         q = query.strip().lower()
-        return [TagRow(str(e.tag), e.name, str(e.value))
-                for e in self.dataset.iterall() if q in e.name.lower()] if self.dataset else []
+        return (
+            [
+                TagRow(str(e.tag), e.name, str(e.value))
+                for e in self.dataset.iterall()
+                if q in e.name.lower()
+            ]
+            if self.dataset
+            else []
+        )
 
     def anonymize(self, prefix: str) -> None:
-        if not self.dataset: raise RuntimeError("No DICOM file loaded.")
-        self.dataset.PatientName      = f"{prefix}_Patient"
-        self.dataset.PatientID        = f"{prefix}_ID"
-        self.dataset.StudyID          = f"{prefix}_Study"
+        if not self.dataset:
+            raise RuntimeError("No DICOM file loaded.")
+        self.dataset.PatientName = f"{prefix}_Patient"
+        self.dataset.PatientID = f"{prefix}_ID"
+        self.dataset.StudyID = f"{prefix}_Study"
         self.dataset.PatientBirthDate = f"{prefix}_BirthDate"
-        self.dataset.PatientSex       = "O"
+        self.dataset.PatientSex = "O"
 
     def save(self, save_path: str) -> None:
-        if not self.dataset: raise RuntimeError("No DICOM file loaded.")
+        if not self.dataset:
+            raise RuntimeError("No DICOM file loaded.")
         self.dataset.save_as(save_path)
 
 
 # ── Fast series folder loading ─────────────────────────────────────────────────
 
+
 @dataclass
 class SeriesInfo:
-    series_uid:         str
+    series_uid: str
     series_description: str
-    modality:           str
-    study_date:         str
-    n_slices:           int
-    file_paths:         list
-    thumbnail:          Optional[np.ndarray] = None
+    modality: str
+    study_date: str
+    n_slices: int
+    file_paths: list
+    thumbnail: Optional[np.ndarray] = None
 
 
 def _read_header(fpath: Path):
@@ -189,8 +239,9 @@ def _read_header(fpath: Path):
 def _read_thumbnail(fpath: Path) -> Optional[np.ndarray]:
     """Decode pixel data for one file — runs in a worker thread."""
     from app.logic.image_processor import prepare_frame_for_display
+
     try:
-        ds  = pydicom.dcmread(str(fpath))
+        ds = pydicom.dcmread(str(fpath))
         arr = ds.pixel_array
         if arr.ndim == 3:
             arr = arr[arr.shape[0] // 2]
@@ -212,7 +263,7 @@ def load_series_from_folder(folder: str) -> List[SeriesInfo]:
       4. Results are grouped in-memory after all futures resolve.
     """
     folder_path = Path(folder)
-    dcm_files   = list(folder_path.rglob("*.dcm")) + list(folder_path.rglob("*.DCM"))
+    dcm_files = list(folder_path.rglob("*.dcm")) + list(folder_path.rglob("*.DCM"))
 
     if not dcm_files:
         return []
@@ -231,28 +282,27 @@ def load_series_from_folder(folder: str) -> List[SeriesInfo]:
 
     # ── Phase 2: sort each series and build metadata ───────────────────────
     proto_series: List[SeriesInfo] = []
-    thumb_targets: List[tuple]     = []   # (index, mid_path)
+    thumb_targets: List[tuple] = []  # (index, mid_path)
 
     for uid, items in groups.items():
         items.sort(key=lambda x: (int(getattr(x[1], "InstanceNumber", 0)), str(x[0])))
         first_ds = items[0][1]
         info = SeriesInfo(
-            series_uid         = uid,
-            series_description = str(getattr(first_ds, "SeriesDescription", "Unknown")),
-            modality           = str(getattr(first_ds, "Modality", "??")),
-            study_date         = str(getattr(first_ds, "StudyDate", "")),
-            n_slices           = len(items),
-            file_paths         = [str(p) for p, _ in items],
+            series_uid=uid,
+            series_description=str(getattr(first_ds, "SeriesDescription", "Unknown")),
+            modality=str(getattr(first_ds, "Modality", "??")),
+            study_date=str(getattr(first_ds, "StudyDate", "")),
+            n_slices=len(items),
+            file_paths=[str(p) for p, _ in items],
         )
         proto_series.append(info)
         thumb_targets.append((len(proto_series) - 1, items[len(items) // 2][0]))
 
     # ── Phase 3: parallel thumbnail decodes ───────────────────────────────
     with ThreadPoolExecutor(max_workers=MAX_THUMB_WORKERS) as pool:
-        thumb_futures = {pool.submit(_read_thumbnail, path): idx
-                         for idx, path in thumb_targets}
+        thumb_futures = {pool.submit(_read_thumbnail, path): idx for idx, path in thumb_targets}
         for fut in as_completed(thumb_futures):
-            idx   = thumb_futures[fut]
+            idx = thumb_futures[fut]
             thumb = fut.result()
             if thumb is not None:
                 proto_series[idx].thumbnail = thumb

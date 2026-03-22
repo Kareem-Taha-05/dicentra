@@ -11,32 +11,37 @@ Design rules that make this bug-free:
   3. _building flag is kept as a secondary guard but blockSignals is the
      primary protection so there are zero timing-dependent race conditions.
 """
+
 from __future__ import annotations
 
-from PyQt5.QtCore  import Qt, QTimer, pyqtSignal
-from PyQt5.QtGui   import QFont
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtWidgets import (
-    QHBoxLayout, QLabel, QPushButton,
-    QSlider, QSpinBox, QVBoxLayout, QWidget,
+    QHBoxLayout,
+    QLabel,
+    QSlider,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
 )
 
-from config.settings import WL_PRESETS, WL_DEFAULT_WIDTH, WL_DEFAULT_CENTER
+from config.settings import WL_DEFAULT_CENTER, WL_DEFAULT_WIDTH, WL_PRESETS
 
-_W_MIN, _W_MAX =    1, 4000
+_W_MIN, _W_MAX = 1, 4000
 _C_MIN, _C_MAX = -1500, 1500
 
 _PRESETS = [
-    ("Brain",       "🧠", "Soft brain tissue"),
-    ("Bone",        "🦴", "Cortical bone"),
-    ("Lung",        "🫁", "Airway & parenchyma"),
+    ("Brain", "🧠", "Soft brain tissue"),
+    ("Bone", "🦴", "Cortical bone"),
+    ("Lung", "🫁", "Airway & parenchyma"),
     ("Soft Tissue", "🫀", "General abdomen"),
-    ("Stroke",      "⚡", "Early ischaemia"),
-    ("Liver",       "🔴", "Hepatic parenchyma"),
-    ("Subdural",    "💡", "Blood / fluid layers"),
+    ("Stroke", "⚡", "Early ischaemia"),
+    ("Liver", "🔴", "Hepatic parenchyma"),
+    ("Subdural", "💡", "Blood / fluid layers"),
 ]
 
 
 # ── widget factories ───────────────────────────────────────────────────────────
+
 
 def _make_slider(mn: int, mx: int, val: int) -> QSlider:
     s = QSlider(Qt.Horizontal)
@@ -69,8 +74,7 @@ def _make_slider(mn: int, mx: int, val: int) -> QSlider:
     return s
 
 
-def _make_spinbox(mn: int, mx: int, val: int,
-                  step: int = 1, color: str = "#F59E0B") -> QSpinBox:
+def _make_spinbox(mn: int, mx: int, val: int, step: int = 1, color: str = "#F59E0B") -> QSpinBox:
     sb = QSpinBox()
     sb.setRange(mn, mx)
     sb.setValue(val)
@@ -95,25 +99,23 @@ def _make_spinbox(mn: int, mx: int, val: int,
 
 
 def _row_label(title: str, subtitle: str) -> QWidget:
-    w   = QWidget()
+    w = QWidget()
     lay = QVBoxLayout(w)
     lay.setContentsMargins(0, 0, 0, 0)
     lay.setSpacing(1)
     t = QLabel(title)
     t.setStyleSheet(
-        "color:#A78BFA; font-family:'Outfit',sans-serif; "
-        "font-size:12px; font-weight:600;"
+        "color:#A78BFA; font-family:'Outfit',sans-serif; " "font-size:12px; font-weight:600;"
     )
     s = QLabel(subtitle)
-    s.setStyleSheet(
-        "color:#A8A5C8; font-family:'Outfit',sans-serif; font-size:10px;"
-    )
+    s.setStyleSheet("color:#A8A5C8; font-family:'Outfit',sans-serif; font-size:10px;")
     lay.addWidget(t)
     lay.addWidget(s)
     return w
 
 
 # ── panel ──────────────────────────────────────────────────────────────────────
+
 
 class WLPanel(QWidget):
     """
@@ -131,7 +133,7 @@ class WLPanel(QWidget):
 
     def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
-        self._building = False   # True only while set_wl / preset is writing
+        self._building = False  # True only while set_wl / preset is writing
 
         self._debounce = QTimer(self)
         self._debounce.setSingleShot(True)
@@ -159,37 +161,40 @@ class WLPanel(QWidget):
         # ── W (contrast) ────────────────────────────────────────────────────
         root.addWidget(_row_label("W — Contrast", "Narrow = sharp  ·  Wide = soft"))
 
-        self._w_slider  = _make_slider(_W_MIN, _W_MAX, int(WL_DEFAULT_WIDTH))
-        self._w_spin    = _make_spinbox(_W_MIN, _W_MAX, int(WL_DEFAULT_WIDTH),
-                                         step=10, color="#F59E0B")
-        w_row = QHBoxLayout(); w_row.setSpacing(8)
+        self._w_slider = _make_slider(_W_MIN, _W_MAX, int(WL_DEFAULT_WIDTH))
+        self._w_spin = _make_spinbox(
+            _W_MIN, _W_MAX, int(WL_DEFAULT_WIDTH), step=10, color="#F59E0B"
+        )
+        w_row = QHBoxLayout()
+        w_row.setSpacing(8)
         w_row.addWidget(self._w_slider, stretch=1)
         w_row.addWidget(self._w_spin)
         root.addLayout(w_row)
 
         # ── L (brightness) ──────────────────────────────────────────────────
-        root.addWidget(_row_label("L — Level",      "Left = brighter  ·  Right = darker"))
+        root.addWidget(_row_label("L — Level", "Left = brighter  ·  Right = darker"))
 
-        self._c_slider  = _make_slider(_C_MIN, _C_MAX, int(WL_DEFAULT_CENTER))
-        self._c_spin    = _make_spinbox(_C_MIN, _C_MAX, int(WL_DEFAULT_CENTER),
-                                         step=5, color="#A78BFA")
-        c_row = QHBoxLayout(); c_row.setSpacing(8)
+        self._c_slider = _make_slider(_C_MIN, _C_MAX, int(WL_DEFAULT_CENTER))
+        self._c_spin = _make_spinbox(
+            _C_MIN, _C_MAX, int(WL_DEFAULT_CENTER), step=5, color="#A78BFA"
+        )
+        c_row = QHBoxLayout()
+        c_row.setSpacing(8)
         c_row.addWidget(self._c_slider, stretch=1)
         c_row.addWidget(self._c_spin)
         root.addLayout(c_row)
 
         # ── HU range display ────────────────────────────────────────────────
-        rng_row = QHBoxLayout(); rng_row.setSpacing(4)
+        rng_row = QHBoxLayout()
+        rng_row.setSpacing(4)
         self._lbl_lo = QLabel("")
         self._lbl_hi = QLabel("")
-        lbl_mid      = QLabel("visible HU range")
+        lbl_mid = QLabel("visible HU range")
         for lbl in (self._lbl_lo, self._lbl_hi):
             lbl.setStyleSheet(
                 "color:#B0ADCC; font-family:'JetBrains Mono',monospace; font-size:10px;"
             )
-        lbl_mid.setStyleSheet(
-            "color:#9490B8; font-family:'Outfit',sans-serif; font-size:10px;"
-        )
+        lbl_mid.setStyleSheet("color:#9490B8; font-family:'Outfit',sans-serif; font-size:10px;")
         rng_row.addWidget(self._lbl_lo)
         rng_row.addStretch()
         rng_row.addWidget(lbl_mid)
@@ -207,7 +212,8 @@ class WLPanel(QWidget):
     # ── internal slots ─────────────────────────────────────────────────────────
 
     def _w_slider_moved(self, v: int) -> None:
-        if self._building: return
+        if self._building:
+            return
         self._w_spin.blockSignals(True)
         self._w_spin.setValue(v)
         self._w_spin.blockSignals(False)
@@ -215,7 +221,8 @@ class WLPanel(QWidget):
         self._debounce.start()
 
     def _c_slider_moved(self, v: int) -> None:
-        if self._building: return
+        if self._building:
+            return
         self._c_spin.blockSignals(True)
         self._c_spin.setValue(v)
         self._c_spin.blockSignals(False)
@@ -223,7 +230,8 @@ class WLPanel(QWidget):
         self._debounce.start()
 
     def _w_spin_changed(self, v: int) -> None:
-        if self._building: return
+        if self._building:
+            return
         self._w_slider.blockSignals(True)
         self._w_slider.setValue(v)
         self._w_slider.blockSignals(False)
@@ -231,7 +239,8 @@ class WLPanel(QWidget):
         self._debounce.start()
 
     def _c_spin_changed(self, v: int) -> None:
-        if self._building: return
+        if self._building:
+            return
         self._c_slider.blockSignals(True)
         self._c_slider.setValue(v)
         self._c_slider.blockSignals(False)
@@ -241,14 +250,22 @@ class WLPanel(QWidget):
     def _on_preset(self, name: str) -> None:
         w, c = WL_PRESETS[name]
         self._building = True
-        self._w_slider.blockSignals(True); self._w_slider.setValue(int(w)); self._w_slider.blockSignals(False)
-        self._c_slider.blockSignals(True); self._c_slider.setValue(int(c)); self._c_slider.blockSignals(False)
-        self._w_spin.blockSignals(True);   self._w_spin.setValue(int(w));   self._w_spin.blockSignals(False)
-        self._c_spin.blockSignals(True);   self._c_spin.setValue(int(c));   self._c_spin.blockSignals(False)
+        self._w_slider.blockSignals(True)
+        self._w_slider.setValue(int(w))
+        self._w_slider.blockSignals(False)
+        self._c_slider.blockSignals(True)
+        self._c_slider.setValue(int(c))
+        self._c_slider.blockSignals(False)
+        self._w_spin.blockSignals(True)
+        self._w_spin.setValue(int(w))
+        self._w_spin.blockSignals(False)
+        self._c_spin.blockSignals(True)
+        self._c_spin.setValue(int(c))
+        self._c_spin.blockSignals(False)
         self._building = False
         self._refresh_range()
-        self._debounce.stop()                      # cancel any pending drag emit
-        self.wl_changed.emit(float(w), float(c))   # fire immediately
+        self._debounce.stop()  # cancel any pending drag emit
+        self.wl_changed.emit(float(w), float(c))  # fire immediately
 
     def _fire(self) -> None:
         """Called by debounce timer — emit current slider values."""
@@ -273,10 +290,18 @@ class WLPanel(QWidget):
         self._building = True
         w = int(max(_W_MIN, min(_W_MAX, width)))
         c = int(max(_C_MIN, min(_C_MAX, center)))
-        self._w_slider.blockSignals(True); self._w_slider.setValue(w); self._w_slider.blockSignals(False)
-        self._c_slider.blockSignals(True); self._c_slider.setValue(c); self._c_slider.blockSignals(False)
-        self._w_spin.blockSignals(True);   self._w_spin.setValue(w);   self._w_spin.blockSignals(False)
-        self._c_spin.blockSignals(True);   self._c_spin.setValue(c);   self._c_spin.blockSignals(False)
+        self._w_slider.blockSignals(True)
+        self._w_slider.setValue(w)
+        self._w_slider.blockSignals(False)
+        self._c_slider.blockSignals(True)
+        self._c_slider.setValue(c)
+        self._c_slider.blockSignals(False)
+        self._w_spin.blockSignals(True)
+        self._w_spin.setValue(w)
+        self._w_spin.blockSignals(False)
+        self._c_spin.blockSignals(True)
+        self._c_spin.setValue(c)
+        self._c_spin.blockSignals(False)
         self._building = False
         self._refresh_range()
 

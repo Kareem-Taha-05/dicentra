@@ -6,18 +6,19 @@ Live HU histogram panel.
 The ONLY output this widget produces is wl_snap_requested — and only when
 the user explicitly clicks the histogram canvas. It never fires automatically.
 """
+
 from __future__ import annotations
 
+import matplotlib
 import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
-import matplotlib
 matplotlib.use("Agg")
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-_BG  = "#07050F"
+_BG = "#07050F"
 _BAR = "#2D1F5E"
 _ACC = "#7C3AED"
 _CTR = "#F59E0B"
@@ -41,10 +42,10 @@ class HistogramPanel(QWidget):
 
     def __init__(self, parent: QWidget = None) -> None:
         super().__init__(parent)
-        self._wl_width  = 400.0
+        self._wl_width = 400.0
         self._wl_center = 40.0
-        self._counts    = None
-        self._edges     = None
+        self._counts = None
+        self._edges = None
         self._build()
 
     def _build(self) -> None:
@@ -62,7 +63,7 @@ class HistogramPanel(QWidget):
 
         self._fig = Figure(figsize=(2.8, 1.6), dpi=96)
         self._fig.patch.set_facecolor(_BG)
-        self._ax  = self._fig.add_subplot(111)
+        self._ax = self._fig.add_subplot(111)
         self._style_ax()
 
         self._canvas = FigureCanvas(self._fig)
@@ -75,9 +76,7 @@ class HistogramPanel(QWidget):
 
         hint = QLabel("click histogram  →  snap brightness center")
         hint.setAlignment(Qt.AlignCenter)
-        hint.setStyleSheet(
-            "color:#9490B8; font-family:'JetBrains Mono',monospace; font-size:9px;"
-        )
+        hint.setStyleSheet("color:#9490B8; font-family:'JetBrains Mono',monospace; font-size:9px;")
         root.addWidget(hint)
 
     # ── axis styling ───────────────────────────────────────────────────────────
@@ -96,12 +95,12 @@ class HistogramPanel(QWidget):
     def update_histogram(self, counts: np.ndarray, edges: np.ndarray) -> None:
         """Receive new histogram data (called when frame changes)."""
         self._counts = counts
-        self._edges  = edges
+        self._edges = edges
         self._redraw()
 
     def update_wl_band(self, width: float, center: float) -> None:
         """Update the W/L overlay band (called when sliders move)."""
-        self._wl_width  = float(width)
+        self._wl_width = float(width)
         self._wl_center = float(center)
         self._redraw()
 
@@ -125,8 +124,12 @@ class HistogramPanel(QWidget):
         hi = self._wl_center + self._wl_width / 2.0
         self._ax.axvspan(lo, hi, alpha=0.22, color=_ACC, linewidth=0, zorder=3)
         self._ax.axvline(
-            self._wl_center, color=_CTR, linewidth=1.4,
-            alpha=0.85, linestyle="--", zorder=4,
+            self._wl_center,
+            color=_CTR,
+            linewidth=1.4,
+            alpha=0.85,
+            linestyle="--",
+            zorder=4,
         )
 
         self._ax.set_xlim(self._edges[0], self._edges[-1])
@@ -135,7 +138,8 @@ class HistogramPanel(QWidget):
         self._ax.set_xticks([lo, self._wl_center, hi])
         self._ax.set_xticklabels(
             [f"{int(lo)}", f"{int(self._wl_center)}", f"{int(hi)}"],
-            color="#A8A5C8", fontsize=7,
+            color="#A8A5C8",
+            fontsize=7,
         )
 
         self._fig.tight_layout(pad=0.3)

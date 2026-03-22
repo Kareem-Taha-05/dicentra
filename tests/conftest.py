@@ -5,11 +5,13 @@ Shared pytest fixtures for the Dicentra test suite.
 
 All fixtures are pure Python — no Qt display required.
 """
+
 from __future__ import annotations
+
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
-from unittest.mock import MagicMock
 
 
 @pytest.fixture
@@ -23,16 +25,16 @@ def sample_hu_array():
 def mock_dicom_dataset():
     """A minimal pydicom Dataset mock with standard CT attributes."""
     ds = MagicMock()
-    ds.RescaleSlope     = 1.0
+    ds.RescaleSlope = 1.0
     ds.RescaleIntercept = -1024.0
-    ds.Rows             = 64
-    ds.Columns          = 64
-    ds.BitsAllocated    = 16
-    ds.BitsStored       = 12
+    ds.Rows = 64
+    ds.Columns = 64
+    ds.BitsAllocated = 16
+    ds.BitsStored = 12
     ds.PixelRepresentation = 0
-    ds.Modality         = "CT"
-    ds.PatientName      = "Test^Patient"
-    ds.StudyDate        = "20250101"
+    ds.Modality = "CT"
+    ds.PatientName = "Test^Patient"
+    ds.StudyDate = "20250101"
     return ds
 
 

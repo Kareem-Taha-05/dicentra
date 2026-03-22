@@ -8,6 +8,7 @@ adjust_brightness_contrast() pattern: it is a pure, stateless function that
 takes raw pixel data and returns a uint8 image.  No signals, no caches,
 no side-effects.
 """
+
 from __future__ import annotations
 
 import logging
@@ -20,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 # ── Rescale helpers ────────────────────────────────────────────────────────────
 
-def apply_rescale(array: np.ndarray,
-                  slope: float, intercept: float) -> np.ndarray:
+
+def apply_rescale(array: np.ndarray, slope: float, intercept: float) -> np.ndarray:
     return array.astype(np.float32) * slope + intercept
 
 
@@ -33,9 +34,9 @@ def normalize_to_uint8(array: np.ndarray) -> np.ndarray:
 
 
 def rgb_to_grayscale(frame: np.ndarray) -> np.ndarray:
-    return (0.2989 * frame[:, :, 0]
-            + 0.5870 * frame[:, :, 1]
-            + 0.1140 * frame[:, :, 2]).astype(np.uint8)
+    return (0.2989 * frame[:, :, 0] + 0.5870 * frame[:, :, 1] + 0.1140 * frame[:, :, 2]).astype(
+        np.uint8
+    )
 
 
 def prepare_frame_for_display(frame: np.ndarray) -> Optional[np.ndarray]:
@@ -48,9 +49,9 @@ def prepare_frame_for_display(frame: np.ndarray) -> Optional[np.ndarray]:
     return normalize_to_uint8(frame)
 
 
-def prepare_dicom_image(pixel_array: np.ndarray,
-                        slope: Optional[float] = None,
-                        intercept: Optional[float] = None) -> Optional[np.ndarray]:
+def prepare_dicom_image(
+    pixel_array: np.ndarray, slope: Optional[float] = None, intercept: Optional[float] = None
+) -> Optional[np.ndarray]:
     arr = pixel_array.astype(np.float32)
     if slope is not None and intercept is not None:
         arr = apply_rescale(arr, slope, intercept)
@@ -59,9 +60,10 @@ def prepare_dicom_image(pixel_array: np.ndarray,
 
 # ── Window / Level (the MedVol way) ───────────────────────────────────────────
 
-def apply_window_level(hu_array: np.ndarray,
-                       window_width: float,
-                       window_center: float) -> np.ndarray:
+
+def apply_window_level(
+    hu_array: np.ndarray, window_width: float, window_center: float
+) -> np.ndarray:
     """
     Apply DICOM window/level to a float HU array → uint8.
 
@@ -87,7 +89,6 @@ def compute_histogram(hu_array: np.ndarray, bins: int = 128, n_bins: int = None)
     if n_bins is not None:
         bins = n_bins
     counts, edges = np.histogram(
-        hu_array.ravel(), bins=bins,
-        range=(float(hu_array.min()), float(hu_array.max()))
+        hu_array.ravel(), bins=bins, range=(float(hu_array.min()), float(hu_array.max()))
     )
     return counts, edges

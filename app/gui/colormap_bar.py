@@ -6,14 +6,18 @@ Compact colormap / LUT selector bar — sits below the toolbar in the image tab.
 Shows a row of clickable LUT swatches with names. The active one is
 highlighted. Emits lut_changed(name: str) when the user picks a new one.
 """
+
 from __future__ import annotations
 
 import numpy as np
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import (
-    QHBoxLayout, QLabel, QPushButton, QScrollArea,
-    QSizePolicy, QVBoxLayout, QWidget,
+    QHBoxLayout,
+    QLabel,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
 )
 
 from app.logic.colormap import LUT_NAMES, lut_preview_strip
@@ -26,19 +30,20 @@ def _strip_pixmap(lut_name: str) -> QPixmap:
     rgba = lut_preview_strip(lut_name, width=_SWATCH_W, height=_SWATCH_H)
     rgba = np.ascontiguousarray(rgba)
     h, w = rgba.shape[:2]
-    img  = QImage(rgba.data, w, h, w * 4, QImage.Format_RGBA8888)
-    img._ref = rgba          # prevent GC
+    img = QImage(rgba.data, w, h, w * 4, QImage.Format_RGBA8888)
+    img._ref = rgba  # prevent GC
     return QPixmap.fromImage(img)
 
 
 class _LutChip(QWidget):
     """Single LUT chip: swatch + label, toggleable."""
+
     clicked = pyqtSignal(str)
 
     def __init__(self, name: str, parent=None):
         super().__init__(parent)
-        self._name    = name
-        self._active  = False
+        self._name = name
+        self._active = False
         self.setCursor(Qt.PointingHandCursor)
         self.setToolTip(f"Apply {name} colourmap")
 
@@ -58,8 +63,7 @@ class _LutChip(QWidget):
         self._lbl = QLabel(name)
         self._lbl.setAlignment(Qt.AlignCenter)
         self._lbl.setStyleSheet(
-            "color:#3D3860; font-family:'Outfit',sans-serif; "
-            "font-size:10px; font-weight:500;"
+            "color:#3D3860; font-family:'Outfit',sans-serif; " "font-size:10px; font-weight:500;"
         )
         lay.addWidget(self._lbl)
 
@@ -112,6 +116,7 @@ class ColormapBar(QWidget):
     lut_changed(str)
         Name of the newly selected LUT.
     """
+
     lut_changed = pyqtSignal(str)
 
     def __init__(self, parent=None):

@@ -5,27 +5,35 @@ Right panel: W/L card + Histogram card only (both scrollable, no cramping).
 Measurements moved to the left sidebar (series_browser.py).
 Nav bar: taller (68px), proper Unicode symbols, full bottom padding.
 """
+
 from __future__ import annotations
 
 import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import (
-    QFileDialog, QHBoxLayout, QLabel, QPushButton,
-    QScrollArea, QSizePolicy, QSlider, QVBoxLayout, QWidget, QFrame,
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
 )
 
-from app.gui.colormap_bar    import ColormapBar
-from app.gui.export_dialog   import ExportDialog
+from app.gui.colormap_bar import ColormapBar
+from app.gui.export_dialog import ExportDialog
 from app.gui.histogram_panel import HistogramPanel
-from app.gui.ruler_canvas    import RulerCanvas
-from app.gui.widgets         import make_button, make_card, ndarray_to_pixmap
-from app.gui.wl_panel        import WLPanel
+from app.gui.ruler_canvas import RulerCanvas
+from app.gui.widgets import make_button, make_card, ndarray_to_pixmap
+from app.gui.wl_panel import WLPanel
+from app.logic.colormap import apply_lut
 from config.settings import WL_PRESETS
-from app.logic.colormap      import apply_lut
-
 
 # ── Click-to-position slider ──────────────────────────────────────────────────
+
 
 class ClickJumpSlider(QSlider):
     """
@@ -46,14 +54,12 @@ class ClickJumpSlider(QSlider):
 
     def _jump_to(self, pixel_x: int) -> None:
         # Account for the handle width so the mapping is accurate at the edges
-        handle_w = self.style().pixelMetric(
-            self.style().PM_SliderLength, None, self
-        )
+        handle_w = self.style().pixelMetric(self.style().PM_SliderLength, None, self)
         usable = max(1, self.width() - handle_w)
         offset = handle_w // 2
-        rel    = max(0, min(pixel_x - offset, usable))
-        ratio  = rel / usable
-        value  = round(self.minimum() + ratio * (self.maximum() - self.minimum()))
+        rel = max(0, min(pixel_x - offset, usable))
+        ratio = rel / usable
+        value = round(self.minimum() + ratio * (self.maximum() - self.minimum()))
         self.setValue(value)
 
 
@@ -78,6 +84,7 @@ _NAV_SS = """
         background: transparent;
     }
 """
+
 
 def _nav_btn(text: str, tooltip: str = "") -> QPushButton:
     btn = QPushButton(text)
@@ -116,7 +123,8 @@ def _play_btn() -> QPushButton:
 
 def _scrubber() -> ClickJumpSlider:
     s = ClickJumpSlider(Qt.Horizontal)
-    s.setRange(0, 0); s.setValue(0)
+    s.setRange(0, 0)
+    s.setValue(0)
     s.setStyleSheet("""
         QSlider::groove:horizontal {
             height: 5px; background: rgba(124,58,237,0.14); border-radius: 2px;
@@ -138,17 +146,18 @@ def _scrubber() -> ClickJumpSlider:
 
 # ── Tab widget ─────────────────────────────────────────────────────────────────
 
+
 class ImageTab(QWidget):
     def __init__(self, controller, parent=None):
         super().__init__(parent)
-        self._ctrl          = controller
-        self._frame_idx     = 0
-        self._active_lut    = "Grayscale"
-        self._last_gray     = None
-        self._all_rendered  = []
+        self._ctrl = controller
+        self._frame_idx = 0
+        self._active_lut = "Grayscale"
+        self._last_gray = None
+        self._all_rendered = []
         self._scrubber_lock = False
         # Measurement signal targets — filled by main_window after construction
-        self.on_measurement_added   = None   # callable(label)
+        self.on_measurement_added = None  # callable(label)
         self.on_measurements_cleared = None  # callable()
         self._setup_ui()
         self._connect_signals()
@@ -157,39 +166,56 @@ class ImageTab(QWidget):
 
     def _setup_ui(self):
         root = QVBoxLayout(self)
-        root.setContentsMargins(20, 18, 20, 16)   # extra bottom margin
+        root.setContentsMargins(20, 18, 20, 16)  # extra bottom margin
         root.setSpacing(0)
 
         # ── Toolbar ────────────────────────────────────────────────────────
-        tb = QHBoxLayout(); tb.setSpacing(8); tb.setContentsMargins(0,0,0,12)
-        self._btn_load   = make_button("📂  Load",   "primary", min_width=100,
-                                       tooltip="Open a .dcm file")
-        self._btn_ruler  = make_button("📏  Ruler",  enabled=False, min_width=88,
-                                       tooltip="Toggle ruler: drag to measure distance")
-        self._btn_export = make_button("💾  Export", enabled=False, min_width=88,
-                                       tooltip="Export frame, GIF, or metadata")
+        tb = QHBoxLayout()
+        tb.setSpacing(8)
+        tb.setContentsMargins(0, 0, 0, 12)
+        self._btn_load = make_button(
+            "📂  Load", "primary", min_width=100, tooltip="Open a .dcm file"
+        )
+        self._btn_ruler = make_button(
+            "📏  Ruler",
+            enabled=False,
+            min_width=88,
+            tooltip="Toggle ruler: drag to measure distance",
+        )
+        self._btn_export = make_button(
+            "💾  Export", enabled=False, min_width=88, tooltip="Export frame, GIF, or metadata"
+        )
         self._btn_ruler.setCheckable(True)
-        tb.addWidget(self._btn_load); tb.addSpacing(4)
-        tb.addWidget(self._btn_ruler); tb.addWidget(self._btn_export)
+        tb.addWidget(self._btn_load)
+        tb.addSpacing(4)
+        tb.addWidget(self._btn_ruler)
+        tb.addWidget(self._btn_export)
         tb.addStretch()
         root.addLayout(tb)
 
         # ── Colormap bar ───────────────────────────────────────────────────
-        cmap_card = make_card(); cmap_card.setFixedHeight(62)
-        cmap_lay  = QVBoxLayout(cmap_card); cmap_lay.setContentsMargins(12,6,12,6)
+        cmap_card = make_card()
+        cmap_card.setFixedHeight(62)
+        cmap_lay = QVBoxLayout(cmap_card)
+        cmap_lay.setContentsMargins(12, 6, 12, 6)
         self._cmap_bar = ColormapBar()
         cmap_lay.addWidget(self._cmap_bar)
         root.addWidget(cmap_card)
         root.addSpacing(12)
 
         # ── Body ───────────────────────────────────────────────────────────
-        body = QHBoxLayout(); body.setSpacing(16); body.setContentsMargins(0,0,0,0)
+        body = QHBoxLayout()
+        body.setSpacing(16)
+        body.setContentsMargins(0, 0, 0, 0)
 
         self._canvas = RulerCanvas()
         body.addWidget(self._canvas, stretch=1)
 
-        vl = QFrame(); vl.setFrameShape(QFrame.VLine)
-        vl.setStyleSheet("background:rgba(124,58,237,0.10);border:none;max-width:1px;min-width:1px;")
+        vl = QFrame()
+        vl.setFrameShape(QFrame.VLine)
+        vl.setStyleSheet(
+            "background:rgba(124,58,237,0.10);border:none;max-width:1px;min-width:1px;"
+        )
         body.addWidget(vl)
 
         # ── Right panel: scrollable, W/L + Histogram only ──────────────────
@@ -202,19 +228,22 @@ class ImageTab(QWidget):
         right_inner = QWidget()
         right_inner.setStyleSheet("background:transparent;")
         right = QVBoxLayout(right_inner)
-        right.setSpacing(12); right.setContentsMargins(0, 0, 6, 0)
+        right.setSpacing(12)
+        right.setContentsMargins(0, 0, 6, 0)
 
         # W/L card — full height, not clipped
         # ── Sliders card ────────────────────────────────────────────────────
         wl_card = make_card()
-        wl_vl   = QVBoxLayout(wl_card); wl_vl.setContentsMargins(0,0,0,0)
+        wl_vl = QVBoxLayout(wl_card)
+        wl_vl.setContentsMargins(0, 0, 0, 0)
         self._wl_panel = WLPanel()
         wl_vl.addWidget(self._wl_panel)
         right.addWidget(wl_card)
 
         # ── Histogram card ───────────────────────────────────────────────────
         hist_card = make_card()
-        hist_vl   = QVBoxLayout(hist_card); hist_vl.setContentsMargins(0,0,0,0)
+        hist_vl = QVBoxLayout(hist_card)
+        hist_vl.setContentsMargins(0, 0, 0, 0)
         self._hist_panel = HistogramPanel()
         hist_vl.addWidget(self._hist_panel)
         right.addWidget(hist_card)
@@ -233,13 +262,13 @@ class ImageTab(QWidget):
         pc_lay.addWidget(prc_hdr)
 
         _PRESETS_ORDER = [
-            ("Brain",       "Brain"),
-            ("Subdural",    "Subdural"),
-            ("Stroke",      "Stroke"),
-            ("Bone",        "Bone"),
+            ("Brain", "Brain"),
+            ("Subdural", "Subdural"),
+            ("Stroke", "Stroke"),
+            ("Bone", "Bone"),
             ("Soft Tissue", "Soft Tissue"),
-            ("Lung",        "Lung"),
-            ("Liver",       "Liver"),
+            ("Lung", "Lung"),
+            ("Liver", "Liver"),
         ]
         _PRESET_SS = """
             QPushButton {
@@ -261,9 +290,11 @@ class ImageTab(QWidget):
             QPushButton:pressed { background: rgba(124,58,237,0.10); }
         """
         from PyQt5.QtWidgets import QHBoxLayout as _HBox
+
         for i in range(0, len(_PRESETS_ORDER), 2):
-            row = _HBox(); row.setSpacing(5)
-            for key, label in _PRESETS_ORDER[i:i+2]:
+            row = _HBox()
+            row.setSpacing(5)
+            for key, label in _PRESETS_ORDER[i : i + 2]:
                 w_val, c_val = WL_PRESETS[key]
                 pbtn = QPushButton(label)
                 pbtn.setToolTip(f"W={w_val}  L={c_val}")
@@ -275,7 +306,7 @@ class ImageTab(QWidget):
                     )
                 )
                 row.addWidget(pbtn)
-            if len(_PRESETS_ORDER[i:i+2]) < 2:
+            if len(_PRESETS_ORDER[i : i + 2]) < 2:
                 row.addStretch()
             pc_lay.addLayout(row)
 
@@ -285,23 +316,23 @@ class ImageTab(QWidget):
         body.addWidget(right_scroll)
 
         root.addLayout(body, stretch=1)
-        root.addSpacing(12)   # breathing room above nav
+        root.addSpacing(12)  # breathing room above nav
 
         # ── Nav bar (taller, proper symbols) ───────────────────────────────
         nav_card = make_card()
-        nav_card.setFixedHeight(68)   # taller so buttons aren't clipped
-        nav_lay  = QHBoxLayout(nav_card)
-        nav_lay.setContentsMargins(14, 12, 14, 12)   # equal top/bottom padding
+        nav_card.setFixedHeight(68)  # taller so buttons aren't clipped
+        nav_lay = QHBoxLayout(nav_card)
+        nav_lay.setContentsMargins(14, 12, 14, 12)  # equal top/bottom padding
         nav_lay.setSpacing(6)
 
         # Symbols: ⏮ ⏪ ▶/⏸ ⏩ ⏭
-        self._btn_first = _nav_btn("|<",  "First frame  (Home)")
-        self._btn_prev  = _nav_btn("<<",  "Previous frame  (Left arrow)")
-        self._btn_play  = _play_btn()
-        self._btn_next  = _nav_btn(">>",  "Next frame  (Right arrow)")
-        self._btn_last  = _nav_btn(">|",  "Last frame  (End)")
+        self._btn_first = _nav_btn("|<", "First frame  (Home)")
+        self._btn_prev = _nav_btn("<<", "Previous frame  (Left arrow)")
+        self._btn_play = _play_btn()
+        self._btn_next = _nav_btn(">>", "Next frame  (Right arrow)")
+        self._btn_last = _nav_btn(">|", "Last frame  (End)")
 
-        self._scrubber  = _scrubber()
+        self._scrubber = _scrubber()
         self._frame_lbl = QLabel("—")
         self._frame_lbl.setFixedWidth(60)
         self._frame_lbl.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
@@ -309,8 +340,13 @@ class ImageTab(QWidget):
             "color:#A8A5C8;font-family:'JetBrains Mono',monospace;font-size:11px;"
         )
 
-        for btn in (self._btn_first, self._btn_prev, self._btn_play,
-                    self._btn_next, self._btn_last):
+        for btn in (
+            self._btn_first,
+            self._btn_prev,
+            self._btn_play,
+            self._btn_next,
+            self._btn_last,
+        ):
             btn.setEnabled(False)
             nav_lay.addWidget(btn)
 
@@ -319,16 +355,21 @@ class ImageTab(QWidget):
         nav_lay.addWidget(self._frame_lbl)
 
         root.addWidget(nav_card)
-        root.addSpacing(10)   # gap before status row
+        root.addSpacing(10)  # gap before status row
 
         # ── Status row ─────────────────────────────────────────────────────
-        sr = QHBoxLayout(); sr.setContentsMargins(0,0,0,0)
-        self._dot = QLabel("●"); self._dot.setStyleSheet("color:#9490B8;font-size:8px;")
+        sr = QHBoxLayout()
+        sr.setContentsMargins(0, 0, 0, 0)
+        self._dot = QLabel("●")
+        self._dot.setStyleSheet("color:#9490B8;font-size:8px;")
         self._status_lbl = QLabel("Ready — load a DICOM file to begin")
         self._status_lbl.setStyleSheet(
             "color:#9490B8;font-family:'JetBrains Mono',monospace;font-size:11px;"
         )
-        sr.addWidget(self._dot); sr.addSpacing(7); sr.addWidget(self._status_lbl); sr.addStretch()
+        sr.addWidget(self._dot)
+        sr.addSpacing(7)
+        sr.addWidget(self._status_lbl)
+        sr.addStretch()
         root.addLayout(sr)
 
         self.setFocusPolicy(Qt.StrongFocus)
@@ -367,8 +408,8 @@ class ImageTab(QWidget):
         self._ctrl.wl_render_ready.connect(self._show_wl_rerender)
 
         # Histogram click → snap brightness center
-        self._hist_panel.wl_snap_requested = (
-            lambda c: self._ctrl.set_window_level(self._ctrl.wl_width, c)
+        self._hist_panel.wl_snap_requested = lambda c: self._ctrl.set_window_level(
+            self._ctrl.wl_width, c
         )
 
         self._cmap_bar.lut_changed.connect(self._on_lut_changed)
@@ -381,12 +422,18 @@ class ImageTab(QWidget):
         if not self._ctrl.is_loaded:
             return super().keyPressEvent(ev)
         k = ev.key()
-        if   k == Qt.Key_Space: self._toggle_play()
-        elif k == Qt.Key_Right: self._ctrl.step_frame(1)
-        elif k == Qt.Key_Left:  self._ctrl.step_frame(-1)
-        elif k == Qt.Key_Home:  self._ctrl.seek_frame(0)
-        elif k == Qt.Key_End:   self._ctrl.seek_frame(self._ctrl.frame_count - 1)
-        else: super().keyPressEvent(ev)
+        if k == Qt.Key_Space:
+            self._toggle_play()
+        elif k == Qt.Key_Right:
+            self._ctrl.step_frame(1)
+        elif k == Qt.Key_Left:
+            self._ctrl.step_frame(-1)
+        elif k == Qt.Key_Home:
+            self._ctrl.seek_frame(0)
+        elif k == Qt.Key_End:
+            self._ctrl.seek_frame(self._ctrl.frame_count - 1)
+        else:
+            super().keyPressEvent(ev)
 
     # ── Slots ──────────────────────────────────────────────────────────────────
 
@@ -394,20 +441,24 @@ class ImageTab(QWidget):
         path, _ = QFileDialog.getOpenFileName(
             self, "Open DICOM File", "", "DICOM Files (*.dcm);;All Files (*)"
         )
-        if path: self._ctrl.load_file(path)
+        if path:
+            self._ctrl.load_file(path)
 
     def _on_file_loaded(self, path: str):
-        self._all_rendered.clear(); self._frame_idx = 0
+        self._all_rendered.clear()
+        self._frame_idx = 0
 
         ds = getattr(self._ctrl, "_model", None)
         if ds and hasattr(ds, "dataset") and ds.dataset:
             ps = getattr(ds.dataset, "PixelSpacing", None)
             if ps and len(ps) >= 2:
-                try: self._canvas.set_pixel_spacing(float(ps[0]), float(ps[1]))
-                except Exception: pass
+                try:
+                    self._canvas.set_pixel_spacing(float(ps[0]), float(ps[1]))
+                except Exception:
+                    pass
 
         is_multi = self._ctrl.is_multiframe
-        n        = self._ctrl.frame_count
+        n = self._ctrl.frame_count
 
         self._scrubber_lock = True
         self._scrubber.setRange(0, max(0, n - 1))
@@ -415,8 +466,13 @@ class ImageTab(QWidget):
         self._scrubber_lock = False
         self._frame_lbl.setText(f"1 / {n}" if is_multi else "—")
 
-        for btn in (self._btn_first, self._btn_prev, self._btn_play,
-                    self._btn_next, self._btn_last):
+        for btn in (
+            self._btn_first,
+            self._btn_prev,
+            self._btn_play,
+            self._btn_next,
+            self._btn_last,
+        ):
             btn.setEnabled(is_multi)
 
         self._btn_ruler.setEnabled(True)
@@ -428,7 +484,7 @@ class ImageTab(QWidget):
         self._ctrl.display_image()
 
     def _show_array(self, arr: np.ndarray):
-        self._last_gray    = arr
+        self._last_gray = arr
         self._all_rendered = [arr]
         self._render_with_lut(arr)
         self._frame_lbl.setText("—")
@@ -439,7 +495,7 @@ class ImageTab(QWidget):
         self._render_with_lut(arr)
 
         idx = self._ctrl.current_frame_index
-        n   = self._ctrl.frame_count
+        n = self._ctrl.frame_count
 
         # Always sync the label and scrubber — scrubber_lock prevents
         # the valueChanged from triggering seek_frame again
@@ -471,26 +527,30 @@ class ImageTab(QWidget):
         self._set_status(f"Paused  ·  frame {i+1} / {n}", "#C0BCDC")
 
     def _on_status(self, msg: str):
-        if any(w in msg.lower() for w in ("error","fail")):
+        if any(w in msg.lower() for w in ("error", "fail")):
             self._set_status(msg, "#FF6B6B")
-        elif any(w in msg.lower() for w in ("loaded","success","displayed","series")):
+        elif any(w in msg.lower() for w in ("loaded", "success", "displayed", "series")):
             self._set_status(msg, "#10B981")
         else:
             self._set_status(msg, "#C0BCDC")
 
     def _toggle_play(self):
-        if not self._ctrl.is_multiframe: return
+        if not self._ctrl.is_multiframe:
+            return
         if self._ctrl.is_playing:
-            self._ctrl.pause_playback(); self._set_play_icon(False)
+            self._ctrl.pause_playback()
+            self._set_play_icon(False)
         else:
-            self._ctrl.resume_playback(); self._set_play_icon(True)
+            self._ctrl.resume_playback()
+            self._set_play_icon(True)
 
     def _set_play_icon(self, playing: bool):
         self._btn_play.setText("||" if playing else ">")
         self._btn_play.setToolTip("Pause  (Space)" if playing else "Play  (Space)")  # noqa
 
     def _on_scrubber(self, value: int):
-        if self._scrubber_lock: return
+        if self._scrubber_lock:
+            return
         if self._ctrl.is_multiframe:
             self._ctrl.seek_frame(value)
 
@@ -531,19 +591,27 @@ class ImageTab(QWidget):
     def _open_export(self):
         export_arr = None
         if self._last_gray is not None:
-            export_arr = (self._last_gray if self._active_lut == "Grayscale"
-                          else apply_lut(self._last_gray, self._active_lut))
+            export_arr = (
+                self._last_gray
+                if self._active_lut == "Grayscale"
+                else apply_lut(self._last_gray, self._active_lut)
+            )
         gif_frames = [
-            (f if self._active_lut == "Grayscale"
-             else apply_lut(f, self._active_lut)[:, :, :3])
+            (f if self._active_lut == "Grayscale" else apply_lut(f, self._active_lut)[:, :, :3])
             for f in self._all_rendered
         ]
         tags = []
-        try: tags = self._ctrl._model.get_all_tags()
-        except Exception: pass
-        ExportDialog(current_arr=export_arr, all_frames=gif_frames,
-                     tags=tags, is_multiframe=self._ctrl.is_multiframe,
-                     parent=self).exec_()
+        try:
+            tags = self._ctrl._model.get_all_tags()
+        except Exception:
+            pass
+        ExportDialog(
+            current_arr=export_arr,
+            all_frames=gif_frames,
+            tags=tags,
+            is_multiframe=self._ctrl.is_multiframe,
+            parent=self,
+        ).exec_()
 
     # ── Render ─────────────────────────────────────────────────────────────────
 
@@ -553,9 +621,9 @@ class ImageTab(QWidget):
         else:
             rgba = np.ascontiguousarray(apply_lut(gray, self._active_lut))
             h, w = rgba.shape[:2]
-            img  = QImage(rgba.data, w, h, w*4, QImage.Format_RGBA8888)
+            img = QImage(rgba.data, w, h, w * 4, QImage.Format_RGBA8888)
             img._ref = rgba
-            px   = QPixmap.fromImage(img)
+            px = QPixmap.fromImage(img)
         self._canvas.set_pixmap(px)
 
     def _set_status(self, msg: str, color: str = "#C0BCDC"):

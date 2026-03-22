@@ -1,18 +1,23 @@
 """app/gui/widgets.py — shared widget helpers, Deep Space Medical theme."""
+
 from __future__ import annotations
+
 import numpy as np
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtWidgets import QFrame, QLabel, QPushButton, QSizePolicy, QWidget
+from PyQt5.QtWidgets import QFrame, QLabel, QPushButton, QWidget
 
 
-def make_button(text: str, style: str = "", enabled: bool = True,
-                min_width: int = 0, tooltip: str = "") -> QPushButton:
+def make_button(
+    text: str, style: str = "", enabled: bool = True, min_width: int = 0, tooltip: str = ""
+) -> QPushButton:
     btn = QPushButton(text)
-    if style:       btn.setObjectName(style)
+    if style:
+        btn.setObjectName(style)
     btn.setEnabled(enabled)
-    if min_width:   btn.setMinimumWidth(min_width)
-    if tooltip:     btn.setToolTip(tooltip)
+    if min_width:
+        btn.setMinimumWidth(min_width)
+    if tooltip:
+        btn.setToolTip(tooltip)
     return btn
 
 
@@ -52,9 +57,9 @@ def ndarray_to_pixmap(arr: np.ndarray) -> QPixmap:
     if arr.ndim == 3:
         if arr.shape[2] == 3:
             # Standard RGB → grayscale luminance
-            arr = (0.2989 * arr[:, :, 0]
-                   + 0.5870 * arr[:, :, 1]
-                   + 0.1140 * arr[:, :, 2]).astype(np.float32)
+            arr = (0.2989 * arr[:, :, 0] + 0.5870 * arr[:, :, 1] + 0.1140 * arr[:, :, 2]).astype(
+                np.float32
+            )
         elif arr.shape[2] == 1:
             arr = arr[:, :, 0]
         else:
@@ -66,7 +71,7 @@ def ndarray_to_pixmap(arr: np.ndarray) -> QPixmap:
         flat = arr.ravel()
         side = int(np.ceil(np.sqrt(len(flat))))
         padded = np.zeros(side * side, dtype=flat.dtype)
-        padded[:len(flat)] = flat
+        padded[: len(flat)] = flat
         arr = padded.reshape(side, side)
 
     # ── Ensure uint8 in [0, 255] ──────────────────────────────────────────

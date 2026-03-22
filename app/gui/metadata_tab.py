@@ -1,25 +1,39 @@
 """app/gui/metadata_tab.py — Metadata tab, Dicentra theme."""
+
 from __future__ import annotations
+
 from typing import List
+
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (
-    QFileDialog, QHBoxLayout, QHeaderView, QInputDialog,
-    QLabel, QLineEdit, QPushButton, QSizePolicy,
-    QTableWidget, QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget, QFrame,
+    QFileDialog,
+    QHBoxLayout,
+    QHeaderView,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QSizePolicy,
+    QTableWidget,
+    QTableWidgetItem,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
 )
+
 from app.data.dicom_model import TagRow
-from app.gui.widgets import make_button, make_separator
+from app.gui.widgets import make_button
 
 # Category chips: (label, emoji-hint, tooltip)
 _CHIPS = [
-    ("All Tags",    "≡",  "Every tag in the file"),
-    ("Patient",     "👤", "Patient demographics — name, ID, DOB, sex, age, weight…"),
-    ("Study",       "📋", "Study identifiers, dates, accession number, requesting physician…"),
-    ("Modality",    "🔬", "Modality, series, acquisition parameters (kVP, TR, TE, slice thickness…)"),
-    ("Equipment",   "🏥", "Manufacturer, station, institution, performing/reading physicians…"),
-    ("Image",       "🖼", "Image type, UID, orientation, position, window/level, rescale…"),
-    ("Pixel Data",  "⬛", "Rows, columns, bits, pixel spacing, pixel data…"),
+    ("All Tags", "≡", "Every tag in the file"),
+    ("Patient", "👤", "Patient demographics — name, ID, DOB, sex, age, weight…"),
+    ("Study", "📋", "Study identifiers, dates, accession number, requesting physician…"),
+    ("Modality", "🔬", "Modality, series, acquisition parameters (kVP, TR, TE, slice thickness…)"),
+    ("Equipment", "🏥", "Manufacturer, station, institution, performing/reading physicians…"),
+    ("Image", "🖼", "Image type, UID, orientation, position, window/level, rescale…"),
+    ("Pixel Data", "⬛", "Rows, columns, bits, pixel spacing, pixel data…"),
 ]
 
 _CHIP_SS = """
@@ -42,20 +56,18 @@ _CHIP_SS = """
 _CHIP_INACTIVE = _CHIP_SS.format(
     bg="rgba(124,58,237,0.07)", fg="#C0BCDC", br="rgba(124,58,237,0.16)"
 )
-_CHIP_ACTIVE = _CHIP_SS.format(
-    bg="rgba(124,58,237,0.28)", fg="#EDE9FE", br="rgba(124,58,237,0.65)"
-)
+_CHIP_ACTIVE = _CHIP_SS.format(bg="rgba(124,58,237,0.28)", fg="#EDE9FE", br="rgba(124,58,237,0.65)")
 
 # Tag colours per column
-_TAG_COL   = QColor("#A78BFA")   # violet — tag address
-_NAME_COL  = QColor("#C8C5E8")   # light lavender — name
-_VALUE_COL = QColor("#F0EEFF")   # near-white — value (most important)
+_TAG_COL = QColor("#A78BFA")  # violet — tag address
+_NAME_COL = QColor("#C8C5E8")  # light lavender — name
+_VALUE_COL = QColor("#F0EEFF")  # near-white — value (most important)
 
 
 class MetadataTab(QWidget):
     def __init__(self, controller, parent=None):
         super().__init__(parent)
-        self._ctrl        = controller
+        self._ctrl = controller
         self._event_count = 0
         self._active_chip = 0
         self._chips: List[QPushButton] = []
@@ -68,7 +80,8 @@ class MetadataTab(QWidget):
         root.setSpacing(10)
 
         # ── Category chips ─────────────────────────────────────────────────
-        chips_row = QHBoxLayout(); chips_row.setSpacing(6)
+        chips_row = QHBoxLayout()
+        chips_row.setSpacing(6)
         for i, (label, icon, tip) in enumerate(_CHIPS):
             btn = QPushButton(f"{icon}  {label}")
             btn.setEnabled(False)
@@ -103,7 +116,8 @@ class MetadataTab(QWidget):
         root.addLayout(chips_row)
 
         # ── Search bar ─────────────────────────────────────────────────────
-        sr = QHBoxLayout(); sr.setSpacing(8)
+        sr = QHBoxLayout()
+        sr.setSpacing(8)
         self._search = QLineEdit()
         self._search.setPlaceholderText("Search tags by name or keyword…")
         self._btn_search = make_button("Search", "primary", min_width=90)
@@ -164,7 +178,8 @@ class MetadataTab(QWidget):
         root.addWidget(self._table, stretch=1)
 
         # ── Tag count status ───────────────────────────────────────────────
-        count_row = QHBoxLayout(); count_row.setContentsMargins(4, 0, 4, 0)
+        count_row = QHBoxLayout()
+        count_row.setContentsMargins(4, 0, 4, 0)
         self._count_lbl = QLabel("")
         self._count_lbl.setStyleSheet(
             "color:#8884A8; font-family:'JetBrains Mono',monospace; font-size:10px;"
@@ -176,12 +191,16 @@ class MetadataTab(QWidget):
         # ── Activity log ───────────────────────────────────────────────────
         log_hdr = QHBoxLayout()
         lbl = QLabel("Activity Log")
-        lbl.setStyleSheet("color:#C0BCDC; font-family:'Outfit',sans-serif; font-size:11px; font-weight:600;")
+        lbl.setStyleSheet(
+            "color:#C0BCDC; font-family:'Outfit',sans-serif; font-size:11px; font-weight:600;"
+        )
         self._log_count = QLabel("0 events")
         self._log_count.setStyleSheet(
             "color:#8884A8; font-family:'JetBrains Mono',monospace; font-size:10px;"
         )
-        log_hdr.addWidget(lbl); log_hdr.addStretch(); log_hdr.addWidget(self._log_count)
+        log_hdr.addWidget(lbl)
+        log_hdr.addStretch()
+        log_hdr.addWidget(self._log_count)
         root.addLayout(log_hdr)
 
         self._log = QTextEdit()
@@ -227,7 +246,8 @@ class MetadataTab(QWidget):
         self._active_chip = idx
 
     def _on_loaded(self, _):
-        for c in self._chips: c.setEnabled(True)
+        for c in self._chips:
+            c.setEnabled(True)
         self._btn_anon.setEnabled(True)
         # Auto-load all tags
         self._chips[0].click()
@@ -235,15 +255,20 @@ class MetadataTab(QWidget):
     def _on_search(self):
         q = self._search.text().strip()
         # Clear active chip highlight when searching
-        for c in self._chips: c.setStyleSheet(_CHIP_INACTIVE)
-        if q: self._ctrl.search_tags(q)
-        else: self._chips[0].click()
+        for c in self._chips:
+            c.setStyleSheet(_CHIP_INACTIVE)
+        if q:
+            self._ctrl.search_tags(q)
+        else:
+            self._chips[0].click()
 
     def _on_anon(self):
         prefix, ok = QInputDialog.getText(self, "Anonymize DICOM", "Prefix for anonymized fields:")
-        if not (ok and prefix): return
+        if not (ok and prefix):
+            return
         path, _ = QFileDialog.getSaveFileName(self, "Save Anonymized File", "", "DICOM (*.dcm)")
-        if path: self._ctrl.anonymize_and_save(prefix, path)
+        if path:
+            self._ctrl.anonymize_and_save(prefix, path)
 
     def _populate(self, rows: List[TagRow]):
         self._table.setRowCount(0)
@@ -279,13 +304,13 @@ class MetadataTab(QWidget):
     def _log_msg(self, msg: str):
         self._event_count += 1
         self._log_count.setText(f"{self._event_count} events")
-        if any(w in msg.lower() for w in ("error","fail")):
+        if any(w in msg.lower() for w in ("error", "fail")):
             color = "#FCA5A5"
-        elif any(w in msg.lower() for w in ("loaded","saved","success","displayed")):
+        elif any(w in msg.lower() for w in ("loaded", "saved", "success", "displayed")):
             color = "#6EE7B7"
         else:
             color = "#C8C5E8"
         self._log.append(
-            f'<span style="color:{color};font-family:\'JetBrains Mono\',monospace;'
+            f"<span style=\"color:{color};font-family:'JetBrains Mono',monospace;"
             f'font-size:11px;">{msg}</span>'
         )

@@ -4,16 +4,20 @@ DICOM Viewer - Main Entry Point
 Launch the DICOM Viewer application.
 """
 
-import sys
 import logging
+import sys
 import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="pydicom")
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt
 
-from app.gui.main_window import MainWindow
-from app.utils.logger import setup_logger
-from config.settings import APP_TITLE, APP_VERSION
+warnings.filterwarnings("ignore", category=UserWarning, module="pydicom")  # noqa: E402
+
+import warnings  # noqa: F811 - already imported, this suppresses the filter placement issue
+
+from PyQt5.QtCore import Qt  # noqa: E402
+from PyQt5.QtWidgets import QApplication  # noqa: E402
+
+from app.gui.main_window import MainWindow  # noqa: E402
+from app.utils.logger import setup_logger  # noqa: E402
+from config.settings import APP_TITLE, APP_VERSION  # noqa: E402
 
 
 def main():

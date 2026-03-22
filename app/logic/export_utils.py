@@ -4,15 +4,19 @@ app/logic/export_utils.py
 Pure I/O export helpers — no Qt imports.
 Called by export_dialog.py and testable without a display.
 """
+
 from __future__ import annotations
-import csv, json, os
+
+import csv
+import json
+
 import numpy as np
-from typing import List
 
 
 def export_frame_png(arr: np.ndarray, path: str) -> None:
     """Save uint8 array (grayscale or RGBA) as PNG."""
     from PIL import Image
+
     if arr.ndim == 2:
         Image.fromarray(arr, mode="L").save(path)
     elif arr.shape[2] == 4:
@@ -23,6 +27,7 @@ def export_frame_png(arr: np.ndarray, path: str) -> None:
 
 def export_frame_jpeg(arr: np.ndarray, path: str, quality: int = 92) -> None:
     from PIL import Image
+
     if arr.ndim == 2:
         img = Image.fromarray(arr, mode="L")
     elif arr.shape[2] == 4:

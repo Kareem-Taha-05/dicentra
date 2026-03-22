@@ -14,30 +14,33 @@ Features
 - Crosshair overlay shows pixel coordinates on hover
 - Escape key cancels a measurement in progress
 """
+
 from __future__ import annotations
 
 import math
 from typing import List, Optional, Tuple
 
-import numpy as np
-from PyQt5.QtCore import QPoint, QPointF, QRectF, Qt, pyqtSignal
+from PyQt5.QtCore import QPointF, QRectF, Qt, pyqtSignal
 from PyQt5.QtGui import (
-    QColor, QCursor, QFont, QImage, QPainter,
-    QPen, QPixmap,
+    QColor,
+    QFont,
+    QPainter,
+    QPen,
+    QPixmap,
 )
 from PyQt5.QtWidgets import QSizePolicy, QWidget
 
-
 # ── Data types ─────────────────────────────────────────────────────────────────
+
 
 class _Measurement:
     """One ruler line with computed distance."""
-    def __init__(self, p1: QPointF, p2: QPointF,
-                 px_dist: float, mm_dist: Optional[float]):
-        self.p1       = p1
-        self.p2       = p2
-        self.px_dist  = px_dist
-        self.mm_dist  = mm_dist
+
+    def __init__(self, p1: QPointF, p2: QPointF, px_dist: float, mm_dist: Optional[float]):
+        self.p1 = p1
+        self.p2 = p2
+        self.px_dist = px_dist
+        self.mm_dist = mm_dist
 
     @property
     def label(self) -> str:
@@ -47,6 +50,7 @@ class _Measurement:
 
 
 # ── Canvas ─────────────────────────────────────────────────────────────────────
+
 
 class RulerCanvas(QWidget):
     """
@@ -61,7 +65,7 @@ class RulerCanvas(QWidget):
     measurement_count       — property: number of stored measurements
     """
 
-    measurement_added   = pyqtSignal(str)   # label of the new measurement
+    measurement_added = pyqtSignal(str)  # label of the new measurement
     measurement_cleared = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -71,15 +75,15 @@ class RulerCanvas(QWidget):
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.StrongFocus)
 
-        self._pixmap:         Optional[QPixmap]      = None
-        self._measurements:   List[_Measurement]     = []
-        self._drawing:        bool                   = False
-        self._start_img:      Optional[QPointF]      = None   # in image coords
-        self._end_img:        Optional[QPointF]      = None
-        self._hover_img:      Optional[QPointF]      = None
-        self._ruler_mode:     bool                   = False
-        self._pixel_spacing:  Tuple[float, float]    = (1.0, 1.0)  # (row_mm, col_mm)
-        self._img_rect:       QRectF                 = QRectF()
+        self._pixmap: Optional[QPixmap] = None
+        self._measurements: List[_Measurement] = []
+        self._drawing: bool = False
+        self._start_img: Optional[QPointF] = None  # in image coords
+        self._end_img: Optional[QPointF] = None
+        self._hover_img: Optional[QPointF] = None
+        self._ruler_mode: bool = False
+        self._pixel_spacing: Tuple[float, float] = (1.0, 1.0)  # (row_mm, col_mm)
+        self._img_rect: QRectF = QRectF()
 
     # ── Public API ─────────────────────────────────────────────────────────────
 
@@ -97,14 +101,14 @@ class RulerCanvas(QWidget):
             self.setCursor(Qt.CrossCursor)
         else:
             self.setCursor(Qt.ArrowCursor)
-            self._drawing   = False
+            self._drawing = False
             self._start_img = None
-            self._end_img   = None
+            self._end_img = None
         self.update()
 
     def clear_measurements(self):
         self._measurements.clear()
-        self._drawing   = False
+        self._drawing = False
         self._start_img = None
         self.update()
         self.measurement_cleared.emit()
@@ -121,7 +125,7 @@ class RulerCanvas(QWidget):
             return None
         ix = (wp.x() - self._img_rect.x()) / self._img_rect.width()
         iy = (wp.y() - self._img_rect.y()) / self._img_rect.height()
-        return QPointF(ix, iy)   # normalised [0,1]
+        return QPointF(ix, iy)  # normalised [0,1]
 
     def _image_to_widget(self, ip: QPointF) -> QPointF:
         return QPointF(
@@ -141,7 +145,7 @@ class RulerCanvas(QWidget):
         H = self._pixmap.height()
         dx_px = (b.x() - a.x()) * W
         dy_px = (b.y() - a.y()) * H
-        px_d  = math.hypot(dx_px, dy_px)
+        px_d = math.hypot(dx_px, dy_px)
 
         ry, rx = self._pixel_spacing
         if ry > 0 and rx > 0:
@@ -156,9 +160,9 @@ class RulerCanvas(QWidget):
             return
         ip = self._widget_to_image(QPointF(ev.pos()))
         if ip:
-            self._drawing   = True
+            self._drawing = True
             self._start_img = ip
-            self._end_img   = ip
+            self._end_img = ip
 
     def mouseMoveEvent(self, ev):
         ip = self._widget_to_image(QPointF(ev.pos()))
@@ -176,21 +180,21 @@ class RulerCanvas(QWidget):
         ip = self._widget_to_image(QPointF(ev.pos()))
         if ip and self._start_img:
             self._end_img = ip
-            px_d, mm_d    = self._px_distance(self._start_img, ip)
-            if px_d > 3:   # ignore tiny accidental clicks
+            px_d, mm_d = self._px_distance(self._start_img, ip)
+            if px_d > 3:  # ignore tiny accidental clicks
                 m = _Measurement(self._start_img, ip, px_d, mm_d)
                 self._measurements.append(m)
                 self.measurement_added.emit(m.label)
-        self._drawing   = False
+        self._drawing = False
         self._start_img = None
-        self._end_img   = None
+        self._end_img = None
         self.update()
 
     def keyPressEvent(self, ev):
         if ev.key() == Qt.Key_Escape and self._drawing:
-            self._drawing   = False
+            self._drawing = False
             self._start_img = None
-            self._end_img   = None
+            self._end_img = None
             self.update()
 
     def leaveEvent(self, _):
@@ -212,7 +216,7 @@ class RulerCanvas(QWidget):
         # Image
         if self._pixmap:
             pm = self._pixmap
-            aspect  = pm.width() / pm.height()
+            aspect = pm.width() / pm.height()
             if W / H > aspect:
                 dh = H
                 dw = int(dh * aspect)
@@ -242,8 +246,9 @@ class RulerCanvas(QWidget):
         """Normalised image → widget coords."""
         return self._image_to_widget(ip)
 
-    def _draw_line_with_label(self, p: QPainter, a: QPointF, b: QPointF,
-                               label: str, color: QColor, alpha: int = 220):
+    def _draw_line_with_label(
+        self, p: QPainter, a: QPointF, b: QPointF, label: str, color: QColor, alpha: int = 220
+    ):
         wa = self._wp(a)
         wb = self._wp(b)
 
@@ -258,16 +263,15 @@ class RulerCanvas(QWidget):
         length = math.hypot(dx, dy) or 1
         nx, ny = -dy / length * 5, dx / length * 5
         for pt in (wa, wb):
-            p.drawLine(QPointF(pt.x() - nx, pt.y() - ny),
-                       QPointF(pt.x() + nx, pt.y() + ny))
+            p.drawLine(QPointF(pt.x() - nx, pt.y() - ny), QPointF(pt.x() + nx, pt.y() + ny))
 
         # Label background + text
         mid = QPointF((wa.x() + wb.x()) / 2, (wa.y() + wb.y()) / 2)
         font = QFont("JetBrains Mono", 9, QFont.Medium)
         p.setFont(font)
-        fm      = p.fontMetrics()
-        tw      = fm.horizontalAdvance(label) + 10
-        th      = fm.height() + 4
+        fm = p.fontMetrics()
+        tw = fm.horizontalAdvance(label) + 10
+        th = fm.height() + 4
         bg_rect = QRectF(mid.x() - tw / 2, mid.y() - th / 2, tw, th)
 
         bg = QColor("#07050F")
@@ -314,10 +318,8 @@ class RulerCanvas(QWidget):
         wh = self._wp(self._hover_img)
         pen = QPen(QColor("#7C3AED"), 0.6, Qt.DotLine)
         p.setPen(pen)
-        p.drawLine(QPointF(self._img_rect.left(), wh.y()),
-                   QPointF(self._img_rect.right(), wh.y()))
-        p.drawLine(QPointF(wh.x(), self._img_rect.top()),
-                   QPointF(wh.x(), self._img_rect.bottom()))
+        p.drawLine(QPointF(self._img_rect.left(), wh.y()), QPointF(self._img_rect.right(), wh.y()))
+        p.drawLine(QPointF(wh.x(), self._img_rect.top()), QPointF(wh.x(), self._img_rect.bottom()))
 
         # Pixel coords hint
         if self._pixmap:

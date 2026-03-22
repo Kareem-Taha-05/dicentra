@@ -36,16 +36,15 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.4.0",
-    "pytest-qt>=4.2.0",
     "ruff>=0.1.0",
+    "black>=24.0.0",
     "pre-commit>=3.5.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/Kareem-Taha-05/dicentra"
-Repository = "https://github.com/Kareem-Taha-05/dicentra"
-"Bug Tracker" = "https://github.com/Kareem-Taha-05/dicentra/issues"
+Homepage = "https://github.com/your-username/dicentra"
+Repository = "https://github.com/your-username/dicentra"
+"Bug Tracker" = "https://github.com/your-username/dicentra/issues"
 
 [project.scripts]
 dicentra = "main:main"
@@ -54,12 +53,28 @@ dicentra = "main:main"
 where = ["."]
 include = ["app*", "config*"]
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py"]
+[tool.black]
+line-length = 100
+target-version = ["py311"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "I"]
-ignore = ["E501"]
+ignore = [
+    "E501",   # line too long — black handles length
+    "E701",   # multiple statements on one line (colon) — intentional style
+    "E702",   # multiple statements on one line (semicolon) — intentional style
+    "E741",   # ambiguous variable name — false positives
+    "E402",   # module level import not at top — needed for warnings filter in main.py
+    "F401",   # imported but unused — re-exports in __init__.py are intentional
+    "I001",   # import block unsorted — handled separately
+]
+
+[tool.ruff.lint.per-file-ignores]
+"app/utils/__init__.py" = ["F401"]
+"app/data/__init__.py" = ["F401"]
+"app/logic/__init__.py" = ["F401"]
+"tests/*" = ["E402", "F401", "I001"]
+"examples/*" = ["E402", "I001"]

@@ -10,20 +10,25 @@ GIF          — all frames of an M2D file as an animated GIF
 CSV          — all DICOM metadata tags exported as a spreadsheet
 JSON         — same metadata as structured JSON
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import os
-from typing import List, Optional
+from typing import List
 
 import numpy as np
-from PyQt5.QtCore import Qt, QThread, QObject, pyqtSignal
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import QObject, Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import (
-    QDialog, QDialogButtonBox, QFileDialog, QGroupBox,
-    QHBoxLayout, QLabel, QProgressBar, QPushButton,
-    QRadioButton, QVBoxLayout, QWidget,
+    QDialog,
+    QFileDialog,
+    QGroupBox,
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QRadioButton,
+    QVBoxLayout,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,39 +36,43 @@ logger = logging.getLogger(__name__)
 
 # ── Background GIF worker ──────────────────────────────────────────────────────
 
+
 class _GifWorker(QObject):
-    progress = pyqtSignal(int)      # 0-100
-    finished = pyqtSignal(str)      # save path on success
-    error    = pyqtSignal(str)
+    progress = pyqtSignal(int)  # 0-100
+    finished = pyqtSignal(str)  # save path on success
+    error = pyqtSignal(str)
 
     def __init__(self, frames: List[np.ndarray], path: str, fps: int = 10):
         super().__init__()
         self._frames = frames
-        self._path   = path
-        self._fps    = fps
+        self._path = path
+        self._fps = fps
 
     def run(self):
         try:
             import imageio
+
             total = len(self._frames)
-            with imageio.get_writer(self._path, mode="I",
-                                    duration=1.0 / self._fps, loop=0) as writer:
+            with imageio.get_writer(
+                self._path, mode="I", duration=1.0 / self._fps, loop=0
+            ) as writer:
                 for i, frame in enumerate(self._frames):
                     writer.append_data(frame)
                     self.progress.emit(int((i + 1) / total * 100))
             self.finished.emit(self._path)
         except ImportError:
-            self.error.emit("imageio is required for GIF export.\n"
-                            "Run: pip install imageio")
+            self.error.emit("imageio is required for GIF export.\n" "Run: pip install imageio")
         except Exception as exc:
             self.error.emit(str(exc))
 
 
 # ── Export functions ───────────────────────────────────────────────────────────
 
+
 def export_frame_png(arr: np.ndarray, path: str) -> None:
     """Save a uint8 array (grayscale or RGBA) as PNG."""
     from PIL import Image
+
     if arr.ndim == 2:
         Image.fromarray(arr, mode="L").save(path)
     elif arr.shape[2] == 4:
@@ -74,6 +83,7 @@ def export_frame_png(arr: np.ndarray, path: str) -> None:
 
 def export_frame_jpeg(arr: np.ndarray, path: str, quality: int = 92) -> None:
     from PIL import Image
+
     if arr.ndim == 2:
         img = Image.fromarray(arr, mode="L")
     elif arr.shape[2] == 4:
@@ -85,6 +95,7 @@ def export_frame_jpeg(arr: np.ndarray, path: str, quality: int = 92) -> None:
 
 def export_metadata_csv(tags, path: str) -> None:
     import csv
+
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["Tag", "Name", "Value"])
@@ -100,6 +111,7 @@ def export_metadata_json(tags, path: str) -> None:
 
 # ── Dialog ─────────────────────────────────────────────────────────────────────
 
+
 class ExportDialog(QDialog):
     """
     Modal export dialog.
@@ -113,14 +125,13 @@ class ExportDialog(QDialog):
     parent        : QWidget
     """
 
-    def __init__(self, current_arr, all_frames, tags,
-                 is_multiframe: bool, parent=None):
+    def __init__(self, current_arr, all_frames, tags, is_multiframe: bool, parent=None):
         super().__init__(parent)
-        self._arr         = current_arr
-        self._frames      = all_frames
-        self._tags        = tags
-        self._is_multi    = is_multiframe
-        self._gif_thread  = None
+        self._arr = current_arr
+        self._frames = all_frames
+        self._tags = tags
+        self._is_multi = is_multiframe
+        self._gif_thread = None
 
         self.setWindowTitle("Export")
         self.setMinimumWidth(440)
@@ -211,8 +222,8 @@ class ExportDialog(QDialog):
         img_lay = QVBoxLayout(img_box)
         img_lay.setSpacing(8)
 
-        self._rb_png  = QRadioButton("PNG  — lossless, full quality")
-        self._rb_jpg  = QRadioButton("JPEG — smaller file, slight compression")
+        self._rb_png = QRadioButton("PNG  — lossless, full quality")
+        self._rb_jpg = QRadioButton("JPEG — smaller file, slight compression")
         self._rb_png.setChecked(True)
 
         img_btn = QPushButton("💾  Save Frame")
@@ -254,7 +265,7 @@ class ExportDialog(QDialog):
         meta_box = QGroupBox("Metadata")
         meta_lay = QVBoxLayout(meta_box)
 
-        self._rb_csv  = QRadioButton("CSV  — open in Excel / Numbers")
+        self._rb_csv = QRadioButton("CSV  — open in Excel / Numbers")
         self._rb_json = QRadioButton("JSON — structured, machine-readable")
         self._rb_csv.setChecked(True)
 
@@ -285,8 +296,8 @@ class ExportDialog(QDialog):
         if self._arr is None:
             self._show_result("No image loaded.", error=True)
             return
-        fmt  = "PNG Files (*.png)" if self._rb_png.isChecked() else "JPEG Files (*.jpg *.jpeg)"
-        ext  = ".png"              if self._rb_png.isChecked() else ".jpg"
+        fmt = "PNG Files (*.png)" if self._rb_png.isChecked() else "JPEG Files (*.jpg *.jpeg)"
+        ext = ".png" if self._rb_png.isChecked() else ".jpg"
         path, _ = QFileDialog.getSaveFileName(self, "Save Frame", f"frame{ext}", fmt)
         if not path:
             return
@@ -312,8 +323,8 @@ class ExportDialog(QDialog):
         self._gif_progress.setVisible(True)
         self._gif_progress.setValue(0)
 
-        self._gif_thread  = QThread()
-        self._gif_worker  = _GifWorker(self._frames, path)
+        self._gif_thread = QThread()
+        self._gif_worker = _GifWorker(self._frames, path)
         self._gif_worker.moveToThread(self._gif_thread)
         self._gif_thread.started.connect(self._gif_worker.run)
         self._gif_worker.progress.connect(self._gif_progress.setValue)

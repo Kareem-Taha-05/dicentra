@@ -6,7 +6,6 @@ Run with:  pytest tests/
 """
 
 import numpy as np
-import pytest
 
 from app.logic.image_processor import (
     apply_rescale,
