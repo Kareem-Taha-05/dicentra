@@ -14,7 +14,7 @@ hide:
 
 [Get Started](installation.md){ .md-button .md-button--primary }
 [Quick Start](quickstart.md){ .md-button }
-[GitHub](https://github.com/your-username/dicentra){ .md-button }
+[GitHub](https://github.com/Kareem-Taha-05/dicentra){ .md-button }
 
 </div>
 
@@ -79,7 +79,7 @@ Built on **PyQt5 · pydicom · NumPy · Matplotlib** — no heavyweight dependen
 ## Quick install
 
 ```bash
-git clone https://github.com/your-username/dicentra.git
+git clone https://github.com/Kareem-Taha-05/dicentra.git
 cd dicentra
 pip install -r requirements.txt
 python main.py

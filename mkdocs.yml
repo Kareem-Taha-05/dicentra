@@ -1,8 +1,8 @@
 site_name: Dicentra
 site_description: Clinical DICOM viewer — window/level, series browser, metadata, colormaps
-site_url: https://your-username.github.io/dicentra
-repo_url: https://github.com/your-username/dicentra
-repo_name: your-username/dicentra
+site_url: https://Kareem-Taha-05.github.io/dicentra
+repo_url: https://github.com/Kareem-Taha-05/dicentra
+repo_name: Kareem-Taha-05/dicentra
 copyright: Copyright &copy; 2025 Kareem
 
 theme:
@@ -52,7 +52,7 @@ extra_css:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-username/dicentra
+      link: https://github.com/Kareem-Taha-05/dicentra
 
 markdown_extensions:
   - admonition

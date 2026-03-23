@@ -12,7 +12,7 @@
 [![PyQt5](https://img.shields.io/badge/PyQt5-5.15-41cd52?style=flat-square&logo=qt&logoColor=white)](https://riverbankcomputing.com/software/pyqt/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen?style=flat-square)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](CONTRIBUTING.md)
-[![CI](https://img.shields.io/github/actions/workflow/status/your-username/dicentra/ci.yml?style=flat-square&label=CI)](https://github.com/your-username/dicentra/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/Kareem-Taha-05/dicentra/ci.yml?style=flat-square&label=CI)](https://github.com/Kareem-Taha-05/dicentra/actions)
 [![Tests](https://img.shields.io/badge/tests-43%20passing-brightgreen?style=flat-square)](#running-tests)
 
 <br/>
@@ -21,9 +21,9 @@
 
 <br/><br/>
 
-[**Documentation**](https://your-username.github.io/dicentra) &nbsp;·&nbsp;
-[**Report a Bug**](https://github.com/your-username/dicentra/issues/new?template=bug_report.md) &nbsp;·&nbsp;
-[**Request a Feature**](https://github.com/your-username/dicentra/issues/new?template=feature_request.md)
+[**Documentation**](https://Kareem-Taha-05.github.io/dicentra) &nbsp;·&nbsp;
+[**Report a Bug**](https://github.com/Kareem-Taha-05/dicentra/issues/new?template=bug_report.md) &nbsp;·&nbsp;
+[**Request a Feature**](https://github.com/Kareem-Taha-05/dicentra/issues/new?template=feature_request.md)
 
 </div>
 
@@ -92,7 +92,7 @@ Every DICOM tag in a searchable, sortable table. Filter chips for Patient, Study
 ## Quick Install
 
 ```bash
-git clone https://github.com/your-username/dicentra.git
+git clone https://github.com/Kareem-Taha-05/dicentra.git
 cd dicentra
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
@@ -236,7 +236,7 @@ pytest tests/ -v
 ## Contributing
 
 ```bash
-git clone https://github.com/your-username/dicentra.git
+git clone https://github.com/Kareem-Taha-05/dicentra.git
 cd dicentra
 pip install -r requirements-dev.txt
 pre-commit install
