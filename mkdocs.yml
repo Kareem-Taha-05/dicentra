@@ -7,8 +7,8 @@ copyright: Copyright &copy; 2025 Kareem
 
 theme:
   name: material
-  favicon: assets/branding/logo.svg
-  logo: assets/branding/logo.svg
+  favicon: assets/branding/logo.png
+  logo: assets/branding/logo.png
   font:
     text: Inter
     code: JetBrains Mono
