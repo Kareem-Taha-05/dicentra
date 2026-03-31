@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="assets/branding/logo.svg" width="180" height="180" alt="Dicentra"/>
+<img src="assets/branding/logo.png" width="360" height="360" alt="Dicentra"/>
 
 # Dicentra
 
-### Clinical DICOM viewer — window/level, colormaps, series browser, metadata — zero configuration
+### Clinical DICOM viewer: window/level, colormaps, series browser, metadata, zero configuration
 
 <br/>
 
@@ -17,7 +17,7 @@
 
 <br/>
 
-<img src="assets/demo/screenshot_main.png" width="860" alt="Dicentra — Deep Space Medical UI with series browser, W/L sliders, and histogram"/>
+<img src="assets/demo/demo.gif" width="860" alt="Dicentra — Deep Space Medical UI with series browser, W/L sliders, and histogram"/>
 
 <br/><br/>
 
@@ -79,11 +79,11 @@ Every DICOM tag in a searchable, sortable table. Filter chips for Patient, Study
 <table>
 <tr>
 <td><img src="assets/demo/screenshot_main.png" alt="Image viewer with W/L and histogram"/></td>
-<td><img src="assets/demo/screenshot_3d.png" alt="Series browser and metadata tab"/></td>
+<td><img src="assets/demo/screenshot_meta.png" alt="Series browser and metadata tab"/></td>
 </tr>
 <tr>
-<td align="center"><em>Image viewer — W/L sliders, live histogram, colormap chips</em></td>
-<td align="center"><em>Series browser + full metadata tag table</em></td>
+<td align="center"><em>Image viewer: W/L sliders, live histogram, colormap chips</em></td>
+<td align="center"><em>Full metadata tag table</em></td>
 </tr>
 </table>
 
